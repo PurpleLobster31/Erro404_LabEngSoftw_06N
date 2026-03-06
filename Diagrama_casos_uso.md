@@ -19,11 +19,17 @@ left to right direction
 title Modelo de Caso de Uso
 
 Actor "Paciente" as pc
-Actor "Médico" as md
+Actor "Equipe Técnica" as et
 
 rectangle "HUB Médico" {
-    pc -- (Procurar hospitais próximos)
-    md -- (Postar prontuários do paciente na plataforma)
+    pc -- (UC001 - Verificar Tempo em Pronto Atendimento)
+    pc -- (UC002 - Visualizar Mapa de Hospitais)
+    pc -- (UC003 - Visualizar Especialidades)
+    pc -- (UC004 - Registrar evento de atendimento)
+    pc -- (UC005 - Avaliar atendimento)
+    pc -- (UC006 - Cadastrar dados médicos)
+    pc -- (UC007 - Favoritar Hospitais)
+    pc -- (UC008 - Pesquisar Hospitais)
 }
 
 @enduml
