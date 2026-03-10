@@ -1,0 +1,30 @@
+# Lista de Requisitos
+
+## Requisitos Funcionais
+
+| ID   | Requisito                       | Descrição                                                                                                                                  | Prioridade |
+| ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| RF01 | Verificar tempo de espera       | O sistema deve permitir que o paciente visualize o tempo estimado de espera para atendimento em unidades de pronto atendimento.            | Alta       |
+| RF02 | Visualizar mapa de hospitais    | O sistema deve apresentar um mapa com a localização das unidades de saúde disponíveis.                                                     | Alta       |
+| RF03 | Visualizar especialidades       | O sistema deve permitir que o paciente visualize quais especialidades médicas estão disponíveis em cada unidade de saúde.                  | Alta       |
+| RF04 | Registrar evento de atendimento | O sistema deve permitir que o paciente registre um evento informando que iniciou ou finalizou um atendimento em uma unidade de saúde.      | Alta       |
+| RF05 | Avaliar atendimento             | O sistema deve permitir que o paciente avalie o atendimento recebido em uma unidade de saúde.                                              | Média      |
+| RF06 | Cadastrar dados médicos         | O sistema deve permitir que o paciente cadastre dados médicos básicos relevantes ao atendimento (ex.: alergias, condições pré-existentes). | Média      |
+| RF07 | Favoritar hospitais             | O sistema deve permitir que o paciente adicione unidades de saúde a uma lista de hospitais favoritos.                                      | Baixa      |
+| RF08 | Pesquisar hospitais             | O sistema deve permitir que o paciente pesquise hospitais pelo nome, localização ou especialidade.                                         | Alta       |
+| RF09 | Atualizar dados de espera       | O sistema deve atualizar automaticamente as estimativas de tempo de espera conforme novos eventos de atendimento forem registrados.        | Alta       |
+
+## Requisitos Não Funcionais
+
+| ID    | Requisito               | Descrição                                                                                                                       | Prioridade |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| RNF01 | Disponibilidade         | O sistema deve estar disponível 24 horas por dia, 7 dias por semana.                                                            | Alta       |
+| RNF02 | Desempenho              | O tempo de resposta para consultas de hospitais e tempo de espera deve ser inferior a 5 segundos.                               | Alta       |
+| RNF03 | Escalabilidade          | O sistema deve suportar múltiplos usuários simultâneos sem degradação significativa de desempenho.                              | Alta       |
+| RNF04 | Segurança               | Os dados dos usuários devem ser protegidos utilizando autenticação e criptografia adequadas.                                    | Alta       |
+| RNF05 | Usabilidade             | A interface do sistema deve ser simples e intuitiva, permitindo que usuários encontrem rapidamente informações sobre hospitais. | Alta       |
+| RNF06 | Compatibilidade         | O sistema deve funcionar em navegadores modernos e dispositivos móveis.                                                         | Média      |
+| RNF07 | Integração com API      | O sistema deve consumir uma API para obter e atualizar dados das unidades de saúde e tempos de espera.                          | Alta       |
+| RNF08 | CI/CD                   | O projeto deve possuir pipeline de integração contínua e entrega contínua.                                                      | Alta       |
+| RNF09 | Infraestrutura em nuvem | O sistema deve ser implantado utilizando um serviço de computação em nuvem da AWS.                                              | Alta       |
+| RNF10 | Testes                  | O sistema deve possuir testes automatizados para garantir a qualidade das funcionalidades principais.                           | Alta       |
