@@ -31,6 +31,71 @@ rectangle "HUB Médico" {
     pc -- (UC007 - Favoritar Hospitais)
     pc -- (UC008 - Pesquisar Hospitais)
 }
+@enduml
+```
+# Diagrama de sequência do UC001
+```plantuml
+@startuml
+
+    actor Paciente as pac
+    boundary "Interface Paciente" as intcli
+    participant Controller as cont
+    database "Banco de dados" as bd
+    
+    alt Por caixa de pesquisa
+        pac -> intcli: Seleciona a lista de unidades
+        intcli -> cont: ListarUnidades()
+        cont -> bd: Busca unidades da cidade
+        bd --> cont: Unidades
+        cont --> intcli: MostrarUnidades()
+        pac -> intcli: Seleciona a unidade
+        intcli -> cont: getTempo(Unidade)
+        alt Se disponível
+            cont --> intcli: Tempo
+        else Senão
+            cont --> intcli: Null
+        end
+
+    else Pelo mapa
+        pac -> intcli: Clica em uma unidade
+        intcli -> cont: getTempo(Unidade)
+        alt Se disponível
+            cont --> intcli: Tempo
+        else Senão
+            cont --> intcli: Null
+        end
+    end
+@enduml
+```
+
+# Escopo do Diagrama de Classe (apenas para salvar formatação)
+Exemplo de uma aula do takase para alterar depois com as classes do nosso projeto
+
+
+```plantuml
+@startuml
+
+hide circle
+
+'skinparam classAttributeIconSize 0
+'skinparam classFontStyle bold
+'skinparam classFontSize 14
+'skinparam classBackgroundColor LightBlue
+'skinparam classStereotypeFontSize 12
+
+class Cliente
+class Chamado 
+class HelpDesk 
+class TimeSuporte 
+class MembroSuporte 
+class Funcionario
+
+Cliente "1" -r- "*" Chamado : Reporta >
+Chamado "*" -r- "1" HelpDesk : Registra >
+Chamado "*" -d-- "0..1" TimeSuporte : Tratado por >
+TimeSuporte o-r- "*" MembroSuporte : Tem membro >
+MembroSuporte -u|> Funcionario
+HelpDesk -d-|> Funcionario
 
 @enduml
 ```
