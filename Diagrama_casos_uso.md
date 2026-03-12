@@ -68,6 +68,32 @@ rectangle "HUB Médico" {
 @enduml
 ```
 
+# Diagrama de Sequência do UC003
+```plantuml
+@startuml
+
+    actor Paciente as pac
+    boundary "Interface paciente" as int
+    participant Controller as cont
+
+    alt Por unidade
+        cont -> int: listarUnidades()
+        activate cont
+        activate int
+        pac -> int: Escolher unidade
+        int -> cont: mostrarUnidade()
+        cont --> int: Unidade
+        deactivate int
+        deactivate cont
+        
+    else Por filtro
+    end
+
+
+
+@enduml
+```
+
 # Escopo do Diagrama de Classe (apenas para salvar formatação)
 Exemplo de uma aula do takase para alterar depois com as classes do nosso projeto
 
