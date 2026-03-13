@@ -38,32 +38,67 @@ rectangle "HUB Médico" {
 @startuml
 
     actor Paciente as pac
-    boundary "Interface Paciente" as intcli
-    participant Controller as cont
+    boundary "Interface Pesquisa" as intpes
+    participant "Controller Pesquisa" as contpes
+    boundary "Interface Mapa" as intmap
+    participant "Controller Mapa" as contmap
+    participant Unidades as un
+    participant "Unidades Repositorio" as unre
     database "Banco de dados" as bd
     
     alt Por caixa de pesquisa
-        pac -> intcli: Seleciona a lista de unidades
-        intcli -> cont: ListarUnidades()
-        cont -> bd: Busca unidades da cidade
-        bd --> cont: Unidades
-        cont --> intcli: MostrarUnidades()
-        pac -> intcli: Seleciona a unidade
-        intcli -> cont: getTempo(Unidade)
-        alt Se disponível
-            cont --> intcli: Tempo
-        else Senão
-            cont --> intcli: Null
-        end
+        contpes -> unre: listarUnidades()
+        activate contpes
+        activate unre
+        unre -> bd: query
+        activate bd
+        bd --> unre: resultado
+        deactivate bd
+        unre -> un: listarUnidades(resultado)
+        un --> unre: Unidades[ ]
+        unre --> contpes: Unidades[ ]
+        deactivate unre
+        contpes -> intpes: listarUnidades(Unidades[ ])
+        activate intpes
+        contpes -> intpes: solicitarInformacoes()
+        pac -> intpes: Informações da Unidade
+        intpes --> contpes: informacoes
+        contpes -> unre: getUnidade(informacoes)
+        activate unre
+        unre -> bd: query
+        activate bd
+        bd --> unre: resultado
+        deactivate bd
+        unre -> un: new Unidade(resultado)
+        un --> unre: Unidade
+        unre --> contpes: Unidade
+        deactivate unre
+        contpes --> intpes: mostrarUnidade(Unidade)
+        deactivate intpes
+        deactivate contpes
+        
 
     else Pelo mapa
-        pac -> intcli: Clica em uma unidade
-        intcli -> cont: getTempo(Unidade)
-        alt Se disponível
-            cont --> intcli: Tempo
-        else Senão
-            cont --> intcli: Null
-        end
+        contmap -> unre: listarUnidades(Localizacao)
+        activate contmap
+        activate unre
+        unre -> bd: query
+        activate bd
+        bd --> unre: resultado
+        deactivate bd
+        unre --> contmap: Unidades[ ]
+        deactivate unre 
+        contmap -> intmap: mostrarMapa()
+        activate intmap
+        contmap -> intmap: espalharUnidades(Chunk,Unidades[])
+        pac -> intmap: Seleciona a unidade
+        intmap -> contmap: getTempo(Unidade)
+        contmap -> contmap: getTempo(Unidade)
+        contmap --> intmap: Tempo
+        deactivate inmap
+        deactivate contmap
+
+
     end
 @enduml
 ```
