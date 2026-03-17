@@ -95,7 +95,7 @@ rectangle "HUB Médico" {
         intmap -> contmap: getTempo(Unidade)
         contmap -> contmap: getTempo(Unidade)
         contmap --> intmap: Tempo
-        deactivate inmap
+        deactivate intmap
         deactivate contmap
 
 
@@ -103,31 +103,71 @@ rectangle "HUB Médico" {
 @enduml
 ```
 
-# Diagrama de Sequência do UC003
+# Diagrama de Sequência do UC004
 ```plantuml
 @startuml
 
-    actor Paciente as pac
-    boundary "Interface paciente" as int
-    participant Controller as cont
+@enduml
+```
 
-    alt Por unidade
-        cont -> int: listarUnidades()
-        activate cont
-        activate int
-        pac -> int: Escolher unidade
-        int -> cont: mostrarUnidade()
-        cont --> int: Unidade
-        deactivate int
-        deactivate cont
-        
-    else Por filtro
-    end
+# Diagrama de Classe de Domínio
+```plantuml
+@startuml
 
+class Paciente {
+    nome: String
+    sobrenome: String
+    dataNascimento: Date
+    email: String
+    senha: String
+}
 
+class Unidade {
+    nome: String
+    ' Rede pública ou privada
+    tipo: String
+    rede: Rede
+    endereco: String
+    numero: String
+    complemento: String
+    cep: String
+    cidade: String
+    estado: String
+    telefone1: String
+    telefone2: String
+    especialidades: List<Especialidade>
+    tempoMedio: double
+}
+
+class Atendimento {
+    paciente: Paciente
+    unidade: Unidade
+    status: String
+    especialidadeAtend: Especialidade
+    horarioChegada: Date
+    horarioTriagem: Date
+    horarioAtendimento: Date
+    horarioSaida: Date
+}
+
+class Especialidade {
+    especialidade: String
+    getEspecialidade()
+}
+
+class RedesMedicas {
+    nome: String
+    convenios: List<Convenio>
+    unidades: List<Unidade>
+}
+
+class Convenio {
+    nome: String
+}
 
 @enduml
 ```
+
 
 # Escopo do Diagrama de Classe (apenas para salvar formatação)
 Exemplo de uma aula do takase para alterar depois com as classes do nosso projeto
