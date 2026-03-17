@@ -147,7 +147,6 @@ class Atendimento {
     horarioChegada: Date
     horarioTriagem: Date
     horarioAtendimento: Date
-    horarioSaida: Date
 }
 
 class Especialidade {
@@ -157,13 +156,10 @@ class Especialidade {
 
 class RedesMedicas {
     nome: String
-    convenios: List<Convenio>
     unidades: List<Unidade>
 }
 
-class Convenio {
-    nome: String
-}
+
 
 @enduml
 ```
