@@ -110,60 +110,6 @@ rectangle "HUB Médico" {
 @enduml
 ```
 
-# Diagrama de Classe de Domínio
-```plantuml
-@startuml
-
-class Paciente {
-    nome: String
-    sobrenome: String
-    dataNascimento: Date
-    email: String
-    senha: String
-}
-
-class Unidade {
-    nome: String
-    ' Rede pública ou privada
-    tipo: String
-    rede: Rede
-    endereco: String
-    numero: String
-    complemento: String
-    cep: String
-    cidade: String
-    estado: String
-    telefone1: String
-    telefone2: String
-    especialidades: List<Especialidade>
-    tempoMedio: double
-}
-
-class Atendimento {
-    paciente: Paciente
-    unidade: Unidade
-    status: String
-    especialidadeAtend: Especialidade
-    horarioChegada: Date
-    horarioTriagem: Date
-    horarioAtendimento: Date
-}
-
-class Especialidade {
-    especialidade: String
-    getEspecialidade()
-}
-
-class RedesMedicas {
-    nome: String
-    unidades: List<Unidade>
-}
-
-
-
-@enduml
-```
-
 
 # Escopo do Diagrama de Classe (apenas para salvar formatação)
 Exemplo de uma aula do takase para alterar depois com as classes do nosso projeto
