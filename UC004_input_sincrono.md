@@ -48,3 +48,44 @@
 | | 2. Ocorre uma falha de rede ou timeout durante o envio. |
 | | 3. O aplicativo exibe uma mensagem de erro informando que o evento não pôde ser registrado. |
 | | 4. O botão mantém o estado original, permitindo que o usuário realize uma nova tentativa. |
+
+
+# Diagrama de Sequência UC004 Sincrono
+```plantuml
+@startuml
+    actor Paciente as pac
+    participant "Interface Atendimento" as intat
+    participant "Controller Atendimento" as contat
+    participant "Repositório Atendimentos" as repat
+    database "Banco de Dados" as bd
+
+    contat -> intat: mostrarAtendimento()
+    activate contat
+
+    contat -> contat: buscarLocalizacao()
+    alt "Localizado em um hospital"
+        loop "3 vezes para chegada, triagem e atendimento"
+            contat -> intat: mostrarBotao()
+            pac -> intat:  registrar etapa
+            intat --> contat: Horario
+            contat -> repat: registrarHora()
+            activate repat
+            repat -> bd: query
+            bd --> repat: resultado da gravação
+            repat --> contat: confirmar()
+            deactivate repat
+
+        end
+        deactivate contat
+    else "Não localizado em um hospital"
+        activate contat
+        contat -> contat: travarAcesso()
+        contat -> intat: mostrarNegacao()
+        destroy contat
+    end
+ 
+
+
+
+@enduml
+```
