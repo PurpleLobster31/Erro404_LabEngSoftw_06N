@@ -12,18 +12,12 @@ router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
 
 @router.post("/", response_model=AtendimentoResponse, status_code=201)
 def registrar_atendimento(payload: AtendimentoCreate):
-    """
-    Abre um novo registro de atendimento (UC004 - Fluxo Principal).
-    Hospital e horário de chegada são obrigatórios (UC004 - Exceção 2).
-    A validação cronológica é feita no schema (UC004 - Exceção 1).
-    """
-    # Check if paciente and unidade exist
+    
     if payload.paciente_id not in database.pacientes_db:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
     if payload.unidade_id not in database.unidades_db:
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")
 
-    # Check for existing open atendimento (one at a time per patient)
     for at in database.atendimentos_db.values():
         if at["paciente_id"] == payload.paciente_id and at["status"] == StatusAtendimento.em_aberto:
             raise HTTPException(
@@ -53,10 +47,6 @@ def registrar_atendimento(payload: AtendimentoCreate):
 
 @router.patch("/{atendimento_id}", response_model=AtendimentoResponse)
 def atualizar_atendimento(atendimento_id: int, payload: AtendimentoUpdate):
-    """
-    Atualiza parcialmente um atendimento em aberto (UC004 - Fluxo Alternativo).
-    Marca como 'concluido' quando o horário de atendimento médico é registrado.
-    """
     record = database.atendimentos_db.get(atendimento_id)
     if not record:
         raise HTTPException(status_code=404, detail="Atendimento não encontrado.")

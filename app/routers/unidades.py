@@ -10,10 +10,6 @@ router = APIRouter(prefix="/unidades", tags=["Unidades"])
 def listar_unidades(
     nome: Optional[str] = Query(None, description="Filtrar por nome (UC008 - Pesquisar Hospitais)")
 ):
-    """
-    Lista todas as unidades de saúde com tempo médio de espera (UC001).
-    Aceita filtro por nome para busca textual (UC008).
-    """
     unidades = list(database.unidades_db.values())
     if nome:
         unidades = [u for u in unidades if nome.lower() in u["nome"].lower()]
@@ -24,7 +20,6 @@ def listar_unidades(
 
 @router.get("/{unidade_id}", response_model=UnidadeResponse)
 def get_unidade(unidade_id: int):
-    """Retorna detalhes e tempo médio de espera de uma unidade específica (UC001)."""
     unidade = database.unidades_db.get(unidade_id)
     if not unidade:
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")

@@ -17,6 +17,6 @@ def root():
     return {"status": "ok", "app": "MedTime API"}
  
  
-@app.get("/health", tags=["Health"])
+@app.get("/ping", tags=["Health"])
 def health_check():
     return {"status": "ok"}
