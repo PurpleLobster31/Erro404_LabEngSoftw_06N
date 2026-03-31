@@ -6,9 +6,9 @@ class UnidadeBase(BaseModel):
     nome: str
     tipo: str
     endereco: str
-    numero: str
+    numero: Optional[str] = None
     complemento: Optional[str] = None
-    cep: str
+    cep: Optional[str] = None
     cidade: str
     estado: str
     telefone1: str
