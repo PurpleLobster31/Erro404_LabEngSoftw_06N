@@ -1,7 +1,3 @@
-"""
-Simulated in-memory database.
-Replace this with SQLAlchemy + PostgreSQL (RDS) when the data layer is ready.
-"""
 from datetime import datetime
 from typing import Dict
 
