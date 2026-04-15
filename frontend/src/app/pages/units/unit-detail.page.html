@@ -1,0 +1,49 @@
+<section class="page detail-page">
+  <a routerLink="/unidades" class="back-button" aria-label="Voltar para unidades">←</a>
+
+  <div class="detail-media">
+    <span class="media-placeholder">Imagem da unidade</span>
+  </div>
+
+  <div class="detail-header">
+    <h1>{{ unit.name }}</h1>
+    <div class="subline">
+      <span>{{ unit.distanceKm }} Km</span>
+      <span class="rating">★ {{ ratingText }}</span>
+    </div>
+    <p class="address">{{ unit.address }}</p>
+  </div>
+
+  <div class="wait-card">
+    <div class="wait-card__icon">⏰</div>
+    <div class="wait-card__content">
+      <span>Tempo Médio de Espera</span>
+      <strong>{{ unit.waitMinutes }} min</strong>
+    </div>
+    <span class="wait-pill">Rápido</span>
+  </div>
+
+  <section class="feedback-section">
+    <h2>O que os pacientes dizem</h2>
+
+    <div class="feedback-list">
+      @for (item of unit.feedback; track item.author) {
+        <article class="feedback-item">
+          <div class="avatar">{{ item.author.charAt(0) }}</div>
+          <div>
+            <div class="feedback-item__header">
+              <strong>{{ item.author }}</strong>
+              <span>{{ ratingStars(item.rating) }}</span>
+            </div>
+            <p>{{ item.text }}</p>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="secondary-button">Como Chegar</button>
+    <a routerLink="/historico" class="primary-button">Registrar Entrada</a>
+  </div>
+</section>

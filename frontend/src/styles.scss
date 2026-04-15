@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
+
+:root {
+	--bg-start: #f5f8ff;
+	--bg-end: #eef5ff;
+	--surface: rgba(255, 255, 255, 0.88);
+	--text-main: #13203a;
+	--muted-text: #66738b;
+	--accent-strong: #1368ef;
+	--accent-soft: #d5e6ff;
+	--nav-height: 4.85rem;
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: 'Sora', 'Segoe UI', sans-serif;
+	color: var(--text-main);
+	background:
+		radial-gradient(circle at top left, rgba(19, 104, 239, 0.16), transparent 28%),
+		radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 22%),
+		linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+	font: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+img {
+	max-width: 100%;
+	display: block;
+}
+
+.page {
+	display: grid;
+	gap: 1rem;
+}

@@ -1,0 +1,14 @@
+<div class="app-shell">
+  <main class="app-content">
+    <router-outlet />
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navegação principal">
+    @for (item of navItems; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="is-active" class="nav-item">
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</div>

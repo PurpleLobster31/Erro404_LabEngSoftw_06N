@@ -1,0 +1,41 @@
+<section class="page history-page">
+  <div class="history-header">
+    <p class="eyebrow">Atendimentos</p>
+    <h1>Histórico</h1>
+    <p>
+      Visão mockada dos atendimentos registrados, pronta para receber os dados reais da API.
+    </p>
+  </div>
+
+  <div class="history-list">
+    @for (record of records; track record.id) {
+      <article class="history-card">
+        <div class="history-media"></div>
+
+        <div class="history-body">
+          <div>
+            <h2>{{ record.unitName }}</h2>
+            <p class="doctor">{{ record.doctor }}</p>
+            <p class="specialty">{{ record.specialty }}</p>
+          </div>
+
+          <div class="status-row">
+            <span class="time-pill">{{ record.waitLabel }}</span>
+            <span class="status-pill" [class.is-done]="record.status === 'Concluído'">
+              {{ record.status }}
+            </span>
+            @if (record.actionLabel) {
+              <button type="button" class="action-pill">{{ record.actionLabel }}</button>
+            } @else {
+              <span class="rating">{{ ratingStars(record.rating ?? 0) }}</span>
+            }
+          </div>
+
+          <div class="footer-row">
+            <span>{{ record.date }}</span>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+</section>
