@@ -5,13 +5,13 @@ from app.schemas.atendimento import (
     AtendimentoResponse,
     StatusAtendimento,
 )
-from app import database
+from backend.app import database
 
 router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
 
 
 @router.post("/", response_model=AtendimentoResponse, status_code=201)
-def registrar_atendimento(payload: AtendimentoCreate):
+def registrar_atendimento(payload: AtendimentoCreate) -> dict:
     
     if payload.paciente_id not in database.pacientes_db:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")

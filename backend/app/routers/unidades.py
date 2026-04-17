@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from app.schemas.unidade import UnidadeResponse
-from app import database
+from backend.app import database
 
 router = APIRouter(prefix="/unidades", tags=["Unidades"])
 

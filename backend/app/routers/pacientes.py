@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.schemas.paciente import PacienteCreate, PacienteResponse
-from app import database
+from backend.app import database
 
 router = APIRouter(prefix="/pacientes", tags=["Pacientes"])
 
