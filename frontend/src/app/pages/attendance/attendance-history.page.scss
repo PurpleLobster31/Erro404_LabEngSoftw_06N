@@ -1,0 +1,128 @@
+:host {
+  display: block;
+}
+
+.history-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.history-header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.history-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.history-header p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.eyebrow {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.history-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.history-card {
+  overflow: hidden;
+  border-radius: 1.45rem;
+  background: white;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.history-media {
+  min-height: 8rem;
+  background: linear-gradient(180deg, #e0e2ea 0%, #eef0f5 100%);
+}
+
+.history-body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem 1.05rem;
+}
+
+.history-body h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.doctor {
+  margin: 0;
+  font-weight: 600;
+}
+
+.specialty,
+.footer-row {
+  color: var(--muted-text);
+}
+
+.specialty {
+  margin: 0.15rem 0 0;
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.time-pill,
+.status-pill,
+.action-pill {
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.time-pill {
+  background: rgba(148, 163, 184, 0.24);
+  color: var(--muted-text);
+}
+
+.status-pill {
+  background: #9be29e;
+  color: #115c2a;
+}
+
+.status-pill.is-done {
+  background: #a8e0b4;
+}
+
+.action-pill {
+  border: 0;
+  background: #e74d4d;
+  color: white;
+}
+
+.rating {
+  color: #f2c94c;
+  letter-spacing: 0.08em;
+}
+
+.footer-row {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.92rem;
+}
+
+@media (min-width: 820px) {
+  .history-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

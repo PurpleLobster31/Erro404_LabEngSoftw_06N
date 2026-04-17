@@ -1,0 +1,53 @@
+<section class="page page-list">
+  <div class="hero-copy hero-panel">
+    <p class="eyebrow">Hospitais próximos</p>
+    <h1>Encontre a unidade certa sem ruído visual.</h1>
+    <p>
+      Estrutura inicial do app para a Sprint 1, com dados mockados e layout baseado no wireframe.
+    </p>
+  </div>
+
+  <div class="search-panel">
+    <label class="search-box" aria-label="Buscar unidade">
+      <span class="search-icon">⌕</span>
+      <input #searchInput type="text" placeholder="Buscar" (input)="onSearch(searchInput.value)" />
+    </label>
+
+    <div class="chips" aria-label="Filtros rápidos">
+      <button type="button" class="chip is-active">Favoritos</button>
+      <button type="button" class="chip">Avaliados</button>
+      <button type="button" class="chip">Filtros</button>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2>Unidades próximas</h2>
+    <button type="button" class="sort-button">Ordenar</button>
+  </div>
+
+  <div class="cards">
+    @for (unit of filteredUnits; track unit.id) {
+      <article class="unit-card">
+        <div class="card-media">
+          <span class="badge">24h</span>
+          <span class="media-placeholder">{{ unit.imageLabel }}</span>
+        </div>
+
+        <div class="card-body">
+          <div>
+            <h3>{{ unit.name }}</h3>
+            <div class="metrics">
+              <span>📍 {{ unit.distanceKm }} Km</span>
+              <span>⏱ {{ unit.waitMinutes }} Min</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <a [routerLink]="['/unidades', unit.id]" class="details-link">Ver detalhes</a>
+            <button type="button" class="favorite-button" aria-label="Favoritar unidade">♡</button>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+</section>
