@@ -25,9 +25,21 @@ venv/
 ENV/
 
 # Environment variables
+.env
 .env.local
-.env.*.local
-*.env
+.env.*
+!.env.example
+
+# Docker & Databases
+.docker/
+data/
+pgdata/
+*.db
+*.sqlite
+*.sqlite3
+
+# Alembic
+alembic/__pycache__/
 
 # pytest & coverage
 .pytest_cache/

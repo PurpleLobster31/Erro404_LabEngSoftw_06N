@@ -1,46 +1,25 @@
-from datetime import datetime
-from typing import Dict
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import declarative_base
+import os
 
-# --- Unidades de saúde ---
-unidades_db: Dict[int, dict] = {
-    1: {
-        "id": 1,
-        "nome": "UPA Central",
-        "tipo": "UPA",
-        "endereco": "Rua das Flores, 100",
-        "cidade": "São Paulo",
-        "estado": "SP",
-        "telefone1": "11-1234-5678",
-        "tempo_medio_minutos": 45.0,
-    },
-    2: {
-        "id": 2,
-        "nome": "Hospital Municipal Norte",
-        "tipo": "Hospital",
-        "endereco": "Av. Norte, 500",
-        "cidade": "São Paulo",
-        "estado": "SP",
-        "telefone1": "11-9876-5432",
-        "tempo_medio_minutos": 90.0,
-    },
-}
+# A string de conexão utiliza o driver +asyncpg
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", 
+    "postgresql+asyncpg://dev_user:dev_password@localhost:5432/app_db"
+)
 
-# --- Pacientes ---
-pacientes_db: Dict[int, dict] = {
-    1: {
-        "id": 1,
-        "nome": "João",
-        "sobrenome": "Silva",
-        "email": "joao@email.com",
-    }
-}
+# echo=True exibe as queries SQL no terminal (útil em dev)
+engine = create_async_engine(DATABASE_URL, echo=True)
 
-# --- Atendimentos ---
-atendimentos_db: Dict[int, dict] = {}
-_atendimento_id_counter = 1
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
 
+Base = declarative_base()
 
-def next_atendimento_id() -> int:
-    global _atendimento_id_counter
-    _atendimento_id_counter += 1
-    return _atendimento_id_counter
+# Dependência do FastAPI para injetar a sessão nas rotas
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session

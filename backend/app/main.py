@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import unidades, atendimentos, pacientes
+from backend.app.routers import unidades, atendimentos, pacientes
  
 app = FastAPI(
     title="MedTime API",
@@ -8,8 +8,8 @@ app = FastAPI(
 )
  
 app.include_router(unidades.router)
-app.include_router(atendimentos.router)
-app.include_router(pacientes.router)
+# app.include_router(atendimentos.router)
+# app.include_router(pacientes.router)
  
  
 @app.get("/", tags=["Health"])

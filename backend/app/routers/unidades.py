@@ -1,26 +1,55 @@
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
-from app.schemas.unidade import UnidadeResponse
-from backend.app import database
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import func
+from geoalchemy2.types import Geography
+
+from backend.app.database import get_db
+from backend.app.models import Unidade
 
 router = APIRouter(prefix="/unidades", tags=["Unidades"])
 
-
-@router.get("/", response_model=List[UnidadeResponse])
-def listar_unidades(
-    nome: Optional[str] = Query(None, description="Filtrar por nome (UC008 - Pesquisar Hospitais)")
+@router.get("/")
+async def listar_unidades(
+    lat: float = Query(None, description="Latitude da posição atual"),
+    lon: float = Query(None, description="Longitude da posição atual"),
+    raio_km: float = Query(10.0, description="Raio de busca em quilómetros"),
+    db: AsyncSession = Depends(get_db)
 ):
-    unidades = list(database.unidades_db.values())
-    if nome:
-        unidades = [u for u in unidades if nome.lower() in u["nome"].lower()]
-        if not unidades:
-            raise HTTPException(status_code=404, detail="Nenhuma unidade encontrada para o termo pesquisado.")
-    return unidades
+    # Em vez de apenas select(Unidade), selecionamos explicitamente as colunas 
+    # normais e extraímos X e Y da coluna espacial.
+    # O label() dá um nome ao resultado para ser acedido no dicionário depois.
+    # Removido o cast para Geography dentro de ST_X e ST_Y
+    query = select(
+        Unidade.id,
+        Unidade.nome,
+        Unidade.endereco,
+        Unidade.tempo_medio_minutos,
+        func.ST_Y(Unidade.localizacao).label('latitude'),
+        func.ST_X(Unidade.localizacao).label('longitude')
+    )
 
+    if lat is not None and lon is not None:
+        ponto_utilizador = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        
+        # Mantemos o cast aqui para garantir cálculos em metros
+        unidade_geog = func.cast(Unidade.localizacao, Geography)
+        utilizador_geog = func.cast(ponto_utilizador, Geography)
 
-@router.get("/{unidade_id}", response_model=UnidadeResponse)
-def get_unidade(unidade_id: int):
-    unidade = database.unidades_db.get(unidade_id)
-    if not unidade:
-        raise HTTPException(status_code=404, detail="Unidade não encontrada.")
-    return unidade
+        distancia = func.ST_Distance(unidade_geog, utilizador_geog)
+
+        query = query.filter(func.ST_DWithin(unidade_geog, utilizador_geog, raio_km * 1000))
+        query = query.add_columns(distancia.label('distancia_metros'))
+        query = query.order_by(distancia)
+
+    # Quando usamos select com colunas específicas, o resultado é iterável por linha,
+    # não mais objetos SQLAlchemy inteiros (scalars).
+    result = await db.execute(query)
+    
+    # Mapear os resultados linha a linha para uma lista de dicionários para
+    # que o FastAPI consiga transformar em JSON perfeitamente.
+    unidades_formatadas = []
+    for row in result.mappings().all():
+        unidades_formatadas.append(dict(row))
+
+    return unidades_formatadas

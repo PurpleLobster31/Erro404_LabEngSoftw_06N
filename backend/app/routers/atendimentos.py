@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas.atendimento import (
+# Este arquivo ainda não foi atualizado para usar o banco via docker
+
+
+
+"""from fastapi import APIRouter, HTTPException
+from backend.app.schemas.atendimento import (
     AtendimentoCreate,
     AtendimentoUpdate,
     AtendimentoResponse,
@@ -80,7 +84,7 @@ def atualizar_atendimento(atendimento_id: int, payload: AtendimentoUpdate):
 
 @router.get("/paciente/{paciente_id}", response_model=list[AtendimentoResponse])
 def listar_atendimentos_paciente(paciente_id: int):
-    """Lista todos os atendimentos de um paciente."""
+    ""\"Lista todos os atendimentos de um paciente.\"""
     if paciente_id not in database.pacientes_db:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
-    return [a for a in database.atendimentos_db.values() if a["paciente_id"] == paciente_id]
+    return [a for a in database.atendimentos_db.values() if a["paciente_id"] == paciente_id]"""
