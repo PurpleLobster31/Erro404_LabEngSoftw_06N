@@ -4,8 +4,8 @@ from sqlalchemy.future import select
 from sqlalchemy import func
 from geoalchemy2.types import Geography
 
-from backend.app.database import get_db
-from backend.app.models import Unidade
+from backend.app.database.database import get_db
+from backend.app.database.models import Unidade
 
 router = APIRouter(prefix="/unidades", tags=["Unidades"])
 

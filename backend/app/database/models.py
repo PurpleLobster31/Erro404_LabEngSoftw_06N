@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Index, LargeBinary, ForeignKey, DateTime, Date
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
-from backend.app.database import Base
+from backend.app.database.database import Base
 
 class Unidade(Base):
     __tablename__ = "unidades"

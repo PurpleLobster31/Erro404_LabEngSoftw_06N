@@ -15,8 +15,8 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 from geoalchemy2.alembic_helpers import include_object as geo_include_object
 from geoalchemy2.alembic_helpers import render_item
 
-from backend.app.database import Base
-from backend.app.models import Unidade, Paciente
+from backend.app.database.database import Base
+from backend.app.database.models import Unidade, Paciente
 import geoalchemy2
 
 

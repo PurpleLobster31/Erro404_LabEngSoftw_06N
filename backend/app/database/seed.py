@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from backend.app.database import AsyncSessionLocal
-from backend.app.models import Unidade, Paciente, Atendimento
+from backend.app.database.database import AsyncSessionLocal
+from backend.app.database.models import Unidade, Paciente, Atendimento
 
 async def upsert_unidades(session: AsyncSession):
     unidades_dados = [

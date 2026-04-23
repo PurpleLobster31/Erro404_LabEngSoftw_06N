@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app import database
+from backend.app.database import database
 
 client = TestClient(app)
 
