@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Index
+from sqlalchemy import Column, Integer, String, Float, Index, LargeBinary
 from geoalchemy2 import Geometry
 from backend.app.database import Base
 
@@ -16,6 +16,7 @@ class Unidade(Base):
         nullable=True
     )
 
+    imagem = Column(LargeBinary, nullable=True)
     # Delega o gerenciamento do índice ao SQLAlchemy/Alembic
     __table_args__ = (
         Index('idx_unidades_localizacao', 'localizacao', postgresql_using='gist'),
