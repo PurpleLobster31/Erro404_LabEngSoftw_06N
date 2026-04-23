@@ -6,16 +6,16 @@ left to right direction
 class Paciente {
     nome: String
     sobrenome: String
-    dataNascimento: Date
+    data_nascimento: Date
     email: String
     senhaHash: String
 }
 
 class Atendimento {
     status: String
-    horarioChegada: Date
-    horarioTriagem: Date
-    horarioAtendimento: Date
+    horario_chegada: Date
+    horario_triagem: Date
+    horario_atendimento: Date
 }
 
 class Unidade {
