@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -53,3 +53,24 @@ async def listar_unidades(
         unidades_formatadas.append(dict(row))
 
     return unidades_formatadas
+
+
+@router.get("/{id}")
+async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
+    """Get a single unit by ID"""
+    query = select(
+        Unidade.id,
+        Unidade.nome,
+        Unidade.endereco,
+        Unidade.tempo_medio_minutos,
+        func.ST_Y(Unidade.localizacao).label('latitude'),
+        func.ST_X(Unidade.localizacao).label('longitude')
+    ).where(Unidade.id == id)
+    
+    result = await db.execute(query)
+    row = result.mappings().first()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Unidade não encontrada")
+    
+    return dict(row)
