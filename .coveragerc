@@ -1,0 +1,9 @@
+[run]
+source = backend.app
+omit =
+    backend/app/schemas/*
+    backend/app/seed.py
+
+[report]
+show_missing = true
+skip_empty = true

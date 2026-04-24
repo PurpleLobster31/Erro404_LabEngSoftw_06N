@@ -57,7 +57,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          python -m pytest --cov=backend.app --cov-report=term-missing --cov-report=xml --cov-fail-under=70
+          python -m pytest --cov=backend.app --cov-config=.coveragerc --cov-report=term-missing --cov-report=xml --cov-fail-under=70
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
