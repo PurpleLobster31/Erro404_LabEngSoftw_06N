@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HospitalMockService } from '../../core/hospital-mock.service';
+import { HospitalMockService, UnitCard } from '../../core/hospital-mock.service';
 
 @Component({
   selector: 'app-unit-detail-page',
@@ -10,17 +10,40 @@ import { HospitalMockService } from '../../core/hospital-mock.service';
   templateUrl: './unit-detail.page.html',
   styleUrl: './unit-detail.page.scss',
 })
-export class UnitDetailPage {
+export class UnitDetailPage implements OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly hospitalMockService = inject(HospitalMockService);
 
-  protected readonly unit = this.getCurrentUnit();
+  protected unit: UnitCard | null = null;
+  protected ratingText = '';
+  protected isLoading = true;
+  protected errorMessage: string | null = null;
 
-  protected ratingText = this.unit.rating.toFixed(1);
+  ngOnInit(): void {
+    this.loadUnit();
+  }
 
-  private getCurrentUnit() {
+  private loadUnit(): void {
     const unitId = Number(this.activatedRoute.snapshot.paramMap.get('id') ?? '1');
-    return this.hospitalMockService.getUnitById(unitId) ?? this.hospitalMockService.getUnits()[0];
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    this.hospitalMockService.getUnitById(unitId).subscribe({
+      next: (unit) => {
+        if (unit) {
+          this.unit = unit;
+          this.ratingText = unit.rating.toFixed(1);
+        } else {
+          this.errorMessage = 'Unidade não encontrada.';
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load unit:', error);
+        this.errorMessage = 'Falha ao carregar unidade. Tente novamente.';
+        this.isLoading = false;
+      },
+    });
   }
 
   ratingStars(rating: number): string {

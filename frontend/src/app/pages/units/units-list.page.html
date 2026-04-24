@@ -25,29 +25,39 @@
     <button type="button" class="sort-button">Ordenar</button>
   </div>
 
-  <div class="cards">
-    @for (unit of filteredUnits; track unit.id) {
-      <article class="unit-card">
-        <div class="card-media">
-          <span class="badge">24h</span>
-          <span class="media-placeholder">{{ unit.imageLabel }}</span>
-        </div>
+  @if (isLoading) {
+    <div class="loading-state">
+      <p>Carregando unidades...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="error-state">
+      <p>{{ errorMessage }}</p>
+    </div>
+  } @else {
+    <div class="cards">
+      @for (unit of filteredUnits; track unit.id) {
+        <article class="unit-card">
+          <div class="card-media">
+            <span class="badge">24h</span>
+            <span class="media-placeholder">{{ unit.imageLabel }}</span>
+          </div>
 
-        <div class="card-body">
-          <div>
-            <h3>{{ unit.name }}</h3>
-            <div class="metrics">
-              <span>📍 {{ unit.distanceKm }} Km</span>
-              <span>⏱ {{ unit.waitMinutes }} Min</span>
+          <div class="card-body">
+            <div>
+              <h3>{{ unit.name }}</h3>
+              <div class="metrics">
+                <span>📍 {{ unit.distanceKm }} Km</span>
+                <span>⏱ {{ unit.waitMinutes }} Min</span>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <a [routerLink]="['/unidades', unit.id]" class="details-link">Ver detalhes</a>
+              <button type="button" class="favorite-button" aria-label="Favoritar unidade">♡</button>
             </div>
           </div>
-
-          <div class="card-actions">
-            <a [routerLink]="['/unidades', unit.id]" class="details-link">Ver detalhes</a>
-            <button type="button" class="favorite-button" aria-label="Favoritar unidade">♡</button>
-          </div>
-        </div>
-      </article>
-    }
-  </div>
+        </article>
+      }
+    </div>
+  }
 </section>
