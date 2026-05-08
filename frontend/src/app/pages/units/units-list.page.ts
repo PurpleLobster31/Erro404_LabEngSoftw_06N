@@ -17,6 +17,7 @@ export class UnitsListPage implements OnInit {
   protected filteredUnits: UnitCard[] = [];
   protected isLoading = true;
   protected errorMessage: string | null = null;
+  protected hasGeolocation = false;
 
   ngOnInit(): void {
     this.loadUnits();
@@ -28,6 +29,7 @@ export class UnitsListPage implements OnInit {
     this.hospitalMockService.getUnits().subscribe({
       next: (units) => {
         this.filteredUnits = units;
+        this.hasGeolocation = units.length > 0 && units.some((u) => u.distanceKm > 0);
         this.isLoading = false;
       },
       error: (error) => {
@@ -50,5 +52,10 @@ export class UnitsListPage implements OnInit {
       },
     });
   }
+
+  onRefresh(): void {
+    this.loadUnits();
+  }
 }
+
 

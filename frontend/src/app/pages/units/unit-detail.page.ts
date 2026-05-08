@@ -15,7 +15,6 @@ export class UnitDetailPage implements OnInit {
   private readonly hospitalMockService = inject(HospitalMockService);
 
   protected unit: UnitCard | null = null;
-  protected ratingText = '';
   protected isLoading = true;
   protected errorMessage: string | null = null;
 
@@ -32,7 +31,6 @@ export class UnitDetailPage implements OnInit {
       next: (unit) => {
         if (unit) {
           this.unit = unit;
-          this.ratingText = unit.rating.toFixed(1);
         } else {
           this.errorMessage = 'Unidade não encontrada.';
         }
@@ -45,9 +43,5 @@ export class UnitDetailPage implements OnInit {
       },
     });
   }
-
-  ratingStars(rating: number): string {
-    const fullStars = Math.max(0, Math.min(5, Math.round(rating)));
-    return '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
-  }
 }
+

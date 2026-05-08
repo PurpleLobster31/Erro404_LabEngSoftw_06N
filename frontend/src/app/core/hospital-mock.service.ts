@@ -1,23 +1,39 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, of, from } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
+/**
+ * Represents a hospital unit from the backend API.
+ * This matches the response structure from GET /unidades/
+ */
+export interface BackendUnit {
+  id: number;
+  nome: string;
+  endereco: string;
+  tempo_medio_triagem: number;
+  tempo_medio_atendimento: number;
+  tempo_medio_total: number;
+  latitude: number;
+  longitude: number;
+  distancia_metros?: number; // Present only when geolocation filtering is used
+}
+
+/**
+ * Frontend representation of a hospital unit.
+ * Simplified for UI display without mock data.
+ */
 export interface UnitCard {
   id: number;
   name: string;
-  distanceKm: number;
-  waitMinutes: number;
-  rating: number;
   address: string;
+  waitMinutes: number; // tempo_medio_total from backend
+  distanceKm: number;
+  latitude: number;
+  longitude: number;
   open24h: boolean;
   imageLabel: string;
-  feedback: Array<{
-    author: string;
-    rating: number;
-    text: string;
-  }>;
 }
 
 export interface AttendanceRecord {
@@ -32,58 +48,11 @@ export interface AttendanceRecord {
   actionLabel?: string;
 }
 
-interface BackendUnit {
-  id: number;
-  nome: string;
-  endereco: string;
-  tempo_medio_minutos: number;
-  localizacao?: { type: string; coordinates: [number, number] };
-  imagem?: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class HospitalMockService {
   private readonly apiUrl = environment.apiUrl;
   private cachedUnits: UnitCard[] | null = null;
-
-  private readonly mockFeedback = {
-    1: [
-      {
-        author: 'Marina Silva',
-        rating: 5,
-        text: 'Atendimento excelente e rápido. Equipe muito atenciosa e profissional.',
-      },
-      {
-        author: 'João Santos',
-        rating: 4,
-        text: 'Boa infraestrutura e médicos competentes. Apenas a espera foi um pouco longa.',
-      },
-      {
-        author: 'Ana Costa',
-        rating: 4,
-        text: 'Ambiente organizado e fluxo claro de atendimento.',
-      },
-    ],
-    2: [
-      {
-        author: 'Lucas Almeida',
-        rating: 4,
-        text: 'Atendimento bom e bem sinalizado.',
-      },
-      {
-        author: 'Bianca Nunes',
-        rating: 5,
-        text: 'Estrutura confortável e equipe prestativa.',
-      },
-    ],
-    3: [
-      {
-        author: 'Pedro Santos',
-        rating: 4,
-        text: 'Boa organização e cadastro rápido.',
-      },
-    ],
-  } as Record<number, Array<{ author: string; rating: number; text: string }>>;
+  private userLocation: { latitude: number; longitude: number } | null = null;
 
   private readonly attendanceRecords: AttendanceRecord[] = [
     {
@@ -118,57 +87,105 @@ export class HospitalMockService {
     },
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.initializeGeolocation();
+  }
 
-  private mapBackendUnit(backendUnit: BackendUnit, index: number): UnitCard {
-    // Mock distance calculation - in a real app, this would come from the backend or be calculated with geolocation
-    const mockDistances = [0.8, 2.1, 3.7];
-    const mockRatings = [4.8, 4.4, 4.6];
+  /**
+   * Attempts to get user's geolocation for distance calculations.
+   * Silently fails if permission denied.
+   */
+  private initializeGeolocation(): void {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation not supported');
+      return;
+    }
 
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.userLocation = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+        // Clear cache to fetch new data with geolocation
+        this.cachedUnits = null;
+      },
+      (error) => {
+        console.warn('Geolocation permission denied or unavailable:', error);
+      },
+      { timeout: 5000, enableHighAccuracy: false }
+    );
+  }
+
+  /**
+   * Maps a backend unit to a frontend UnitCard.
+   */
+  private mapBackendUnit(backendUnit: BackendUnit): UnitCard {
     return {
       id: backendUnit.id,
       name: backendUnit.nome,
       address: backendUnit.endereco,
-      waitMinutes: backendUnit.tempo_medio_minutos,
-      rating: mockRatings[index] || 4.5,
-      distanceKm: mockDistances[index] || Math.random() * 5 + 0.5,
+      waitMinutes: Math.round(backendUnit.tempo_medio_total),
+      distanceKm: backendUnit.distancia_metros
+        ? Math.round((backendUnit.distancia_metros / 1000) * 10) / 10
+        : 0,
+      latitude: backendUnit.latitude,
+      longitude: backendUnit.longitude,
       open24h: true,
       imageLabel: 'Imagem da unidade',
-      feedback: this.mockFeedback[backendUnit.id] || [],
     };
   }
 
+  /**
+   * Fetches units from the backend API.
+   * If geolocation is available, includes it for distance calculation and ordering.
+   */
   getUnits(): Observable<UnitCard[]> {
-    // If we have cached units, return them to avoid multiple API calls
+    // Return cached units if available
     if (this.cachedUnits) {
       return of(this.cachedUnits);
     }
 
-    return this.http.get<BackendUnit[]>(`${this.apiUrl}/unidades/`).pipe(
+    // Build query parameters with geolocation if available
+    let url = `${this.apiUrl}/unidades/`;
+    if (this.userLocation) {
+      const params = new URLSearchParams({
+        lat: this.userLocation.latitude.toString(),
+        lon: this.userLocation.longitude.toString(),
+        raio_km: '10.0',
+      });
+      url = `${url}?${params.toString()}`;
+    }
+
+    return this.http.get<BackendUnit[]>(url).pipe(
       map((backendUnits) => {
-        const mapped = backendUnits.map((unit, index) => this.mapBackendUnit(unit, index));
+        const mapped = backendUnits.map((unit) => this.mapBackendUnit(unit));
         this.cachedUnits = mapped;
         return mapped;
       }),
       catchError((error) => {
         console.error('Error fetching units:', error);
-        // Fallback to mock data if API fails
-        return this.getMockUnits();
+        return of([]);
       })
     );
   }
 
+  /**
+   * Fetches a single unit by ID.
+   */
   getUnitById(id: number): Observable<UnitCard | undefined> {
     return this.http.get<BackendUnit>(`${this.apiUrl}/unidades/${id}`).pipe(
-      map((backendUnit) => this.mapBackendUnit(backendUnit, 0)),
+      map((backendUnit) => this.mapBackendUnit(backendUnit)),
       catchError((error) => {
         console.error(`Error fetching unit ${id}:`, error);
-        // Fallback to mock data
-        return of(this.getMockUnitById(id));
+        return of(undefined);
       })
     );
   }
 
+  /**
+   * Searches units by name or address.
+   */
   searchUnits(query: string): Observable<UnitCard[]> {
     return this.getUnits().pipe(
       map((units) => {
@@ -187,85 +204,22 @@ export class HospitalMockService {
     );
   }
 
+  /**
+   * Refreshes units list, forcing new API call and attempting geolocation recheck.
+   */
+  refreshUnits(): Observable<UnitCard[]> {
+    this.cachedUnits = null;
+    this.initializeGeolocation();
+    return this.getUnits();
+  }
+
+  /**
+   * Returns attendance history (currently static mock data).
+   * TODO: Replace with API call when endpoint is available.
+   */
   getAttendanceHistory(): AttendanceRecord[] {
     return this.attendanceRecords;
   }
-
-  // Fallback mock data methods
-  private getMockUnits(): Observable<UnitCard[]> {
-    return of([
-      {
-        id: 1,
-        name: 'Pronto Socorro - Jardim Silveira',
-        distanceKm: 0.8,
-        waitMinutes: 37,
-        rating: 4.8,
-        address: 'Via Paiaguás, 331-269 - Jardim Silveira, Barueri',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[1] || [],
-      },
-      {
-        id: 2,
-        name: 'Pronto Socorro - São Camilo',
-        distanceKm: 2.1,
-        waitMinutes: 53,
-        rating: 4.4,
-        address: 'Rua São Camilo, 120 - Centro',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[2] || [],
-      },
-      {
-        id: 3,
-        name: 'UPA Central',
-        distanceKm: 3.7,
-        waitMinutes: 42,
-        rating: 4.6,
-        address: 'Av. Central, 880 - Centro',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[3] || [],
-      },
-    ]);
-  }
-
-  private getMockUnitById(id: number): UnitCard | undefined {
-    return [
-      {
-        id: 1,
-        name: 'Pronto Socorro - Jardim Silveira',
-        distanceKm: 0.8,
-        waitMinutes: 37,
-        rating: 4.8,
-        address: 'Via Paiaguás, 331-269 - Jardim Silveira, Barueri',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[1] || [],
-      },
-      {
-        id: 2,
-        name: 'Pronto Socorro - São Camilo',
-        distanceKm: 2.1,
-        waitMinutes: 53,
-        rating: 4.4,
-        address: 'Rua São Camilo, 120 - Centro',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[2] || [],
-      },
-      {
-        id: 3,
-        name: 'UPA Central',
-        distanceKm: 3.7,
-        waitMinutes: 42,
-        rating: 4.6,
-        address: 'Av. Central, 880 - Centro',
-        open24h: true,
-        imageLabel: 'Imagem da unidade',
-        feedback: this.mockFeedback[3] || [],
-      },
-    ].find((unit) => unit.id === id);
-  }
 }
+
 

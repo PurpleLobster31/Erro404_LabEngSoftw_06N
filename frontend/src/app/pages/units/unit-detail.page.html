@@ -17,8 +17,9 @@
     <div class="detail-header">
       <h1>{{ unit.name }}</h1>
       <div class="subline">
-        <span>{{ unit.distanceKm }} Km</span>
-        <span class="rating">★ {{ ratingText }}</span>
+        @if (unit.distanceKm > 0) {
+          <span>📍 {{ unit.distanceKm }} Km</span>
+        }
       </div>
       <p class="address">{{ unit.address }}</p>
     </div>
@@ -29,25 +30,20 @@
         <span>Tempo Médio de Espera</span>
         <strong>{{ unit.waitMinutes }} min</strong>
       </div>
-      <span class="wait-pill">Rápido</span>
+      <span class="wait-pill">{{ unit.waitMinutes < 45 ? 'Rápido' : 'Moderado' }}</span>
     </div>
 
-    <section class="feedback-section">
-      <h2>O que os pacientes dizem</h2>
-
-      <div class="feedback-list">
-        @for (item of unit.feedback; track item.author) {
-          <article class="feedback-item">
-            <div class="avatar">{{ item.author.charAt(0) }}</div>
-            <div>
-              <div class="feedback-item__header">
-                <strong>{{ item.author }}</strong>
-                <span>{{ ratingStars(item.rating) }}</span>
-              </div>
-              <p>{{ item.text }}</p>
-            </div>
-          </article>
-        }
+    <section class="info-section">
+      <h2>Informações</h2>
+      <div class="info-list">
+        <div class="info-item">
+          <span>Status</span>
+          <strong>Aberto 24h</strong>
+        </div>
+        <div class="info-item">
+          <span>Localização</span>
+          <strong>{{ unit.address }}</strong>
+        </div>
       </div>
     </section>
 
@@ -57,3 +53,4 @@
     </div>
   }
 </section>
+

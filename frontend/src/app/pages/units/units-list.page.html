@@ -3,7 +3,11 @@
     <p class="eyebrow">Hospitais próximos</p>
     <h1>Encontre a unidade certa sem ruído visual.</h1>
     <p>
-      Estrutura inicial do app para a Sprint 1, com dados mockados e layout baseado no wireframe.
+      @if (hasGeolocation) {
+        Unidades ordenadas por proximidade
+      } @else {
+        Permita acesso à sua localização para ver unidades próximas
+      }
     </p>
   </div>
 
@@ -16,13 +20,13 @@
     <div class="chips" aria-label="Filtros rápidos">
       <button type="button" class="chip is-active">Favoritos</button>
       <button type="button" class="chip">Avaliados</button>
-      <button type="button" class="chip">Filtros</button>
+      <button type="button" class="chip" (click)="onRefresh()">✓ Atualizar</button>
     </div>
   </div>
 
   <div class="section-header">
     <h2>Unidades próximas</h2>
-    <button type="button" class="sort-button">Ordenar</button>
+    <button type="button" class="sort-button" (click)="onRefresh()">Atualizar</button>
   </div>
 
   @if (isLoading) {
@@ -32,6 +36,11 @@
   } @else if (errorMessage) {
     <div class="error-state">
       <p>{{ errorMessage }}</p>
+      <button type="button" (click)="onRefresh()" class="retry-button">Tentar novamente</button>
+    </div>
+  } @else if (filteredUnits.length === 0) {
+    <div class="empty-state">
+      <p>Nenhuma unidade encontrada</p>
     </div>
   } @else {
     <div class="cards">
@@ -46,8 +55,10 @@
             <div>
               <h3>{{ unit.name }}</h3>
               <div class="metrics">
-                <span>📍 {{ unit.distanceKm }} Km</span>
-                <span>⏱ {{ unit.waitMinutes }} Min</span>
+                @if (unit.distanceKm > 0) {
+                  <span>📍 {{ unit.distanceKm }} Km</span>
+                }
+                <span>⏱ {{ unit.waitMinutes }} min</span>
               </div>
             </div>
 
@@ -61,3 +72,4 @@
     </div>
   }
 </section>
+
