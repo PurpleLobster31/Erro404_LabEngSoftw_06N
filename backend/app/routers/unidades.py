@@ -98,16 +98,67 @@ async def listar_unidades(
 
 @router.get("/{id}")
 async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
-    """Get a single unit by ID"""
+    """Get a single unit by ID with calculated average times"""
+    # CTE 1: Últimos 5 tempos de triagem por unidade
+    tempo_triagem_expr = (func.extract('epoch', Atendimento.horario_triagem - Atendimento.horario_chegada) / 60).label('tempo_triagem')
+    rn_triagem = func.row_number().over(
+        partition_by=Atendimento.unidade_id,
+        order_by=Atendimento.horario_triagem.desc()
+    ).label('rn')
+
+    cte_triagem_raw = select(
+        Atendimento.unidade_id,
+        tempo_triagem_expr,
+        rn_triagem
+    ).where(
+        and_(Atendimento.horario_triagem.is_not(None), Atendimento.horario_chegada.is_not(None))
+    ).cte('cte_triagem_raw')
+
+    cte_triagem_agg = select(
+        cte_triagem_raw.c.unidade_id,
+        func.avg(cte_triagem_raw.c.tempo_triagem).label('tempo_medio_triagem')
+    ).where(cte_triagem_raw.c.rn <= 5).group_by(cte_triagem_raw.c.unidade_id).cte('cte_triagem_agg')
+
+    # CTE 2: Últimos 5 tempos de atendimento por unidade
+    tempo_atend_expr = (func.extract('epoch', Atendimento.horario_atendimento - Atendimento.horario_triagem) / 60).label('tempo_atendimento')
+    rn_atend = func.row_number().over(
+        partition_by=Atendimento.unidade_id,
+        order_by=Atendimento.horario_atendimento.desc()
+    ).label('rn')
+
+    cte_atend_raw = select(
+        Atendimento.unidade_id,
+        tempo_atend_expr,
+        rn_atend
+    ).where(
+        and_(Atendimento.horario_atendimento.is_not(None), Atendimento.horario_triagem.is_not(None))
+    ).cte('cte_atend_raw')
+
+    cte_atend_agg = select(
+        cte_atend_raw.c.unidade_id,
+        func.avg(cte_atend_raw.c.tempo_atendimento).label('tempo_medio_atendimento')
+    ).where(cte_atend_raw.c.rn <= 5).group_by(cte_atend_raw.c.unidade_id).cte('cte_atend_agg')
+
+    # Tratamento de valores nulos (COALESCE) para garantir que somas parciais funcionem
+    col_triagem = func.coalesce(cte_triagem_agg.c.tempo_medio_triagem, 0).label('tempo_medio_triagem')
+    col_atendimento = func.coalesce(cte_atend_agg.c.tempo_medio_atendimento, 0).label('tempo_medio_atendimento')
+    col_total = (func.coalesce(cte_triagem_agg.c.tempo_medio_triagem, 0) + func.coalesce(cte_atend_agg.c.tempo_medio_atendimento, 0)).label('tempo_medio_total')
+
     query = select(
         Unidade.id,
         Unidade.nome,
         Unidade.endereco,
-        Unidade.tempo_medio_minutos,
+        col_triagem,
+        col_atendimento,
+        col_total,
         func.ST_Y(Unidade.localizacao).label('latitude'),
         func.ST_X(Unidade.localizacao).label('longitude')
     ).where(Unidade.id == id)
-    
+
+    # Junção das métricas com a tabela de Unidades
+    query = query.outerjoin(cte_triagem_agg, Unidade.id == cte_triagem_agg.c.unidade_id)
+    query = query.outerjoin(cte_atend_agg, Unidade.id == cte_atend_agg.c.unidade_id)
+
     result = await db.execute(query)
     row = result.mappings().first()
     

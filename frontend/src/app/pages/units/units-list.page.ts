@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HospitalMockService, UnitCard } from '../../core/hospital-mock.service';
 
@@ -12,6 +12,7 @@ import { HospitalMockService, UnitCard } from '../../core/hospital-mock.service'
 })
 export class UnitsListPage implements OnInit {
   private readonly hospitalMockService = inject(HospitalMockService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
   protected search = '';
   protected filteredUnits: UnitCard[] = [];
@@ -24,18 +25,23 @@ export class UnitsListPage implements OnInit {
   }
 
   private loadUnits(): void {
+    console.error('[MEDTIME-DEBUG] loadUnits() called');
     this.isLoading = true;
     this.errorMessage = null;
     this.hospitalMockService.getUnits().subscribe({
       next: (units) => {
+        console.error('[MEDTIME-DEBUG] Subscription received', units.length, 'units');
         this.filteredUnits = units;
         this.hasGeolocation = units.length > 0 && units.some((u) => u.distanceKm > 0);
         this.isLoading = false;
+        this.changeDetectorRef.markForCheck(); // Explicitly trigger change detection
       },
       error: (error) => {
+        console.error('[MEDTIME-DEBUG] Subscription error:', error);
         console.error('Falha ao carregar unidades:', error);
         this.errorMessage = 'Falha ao carregar unidades. Tente novamente.';
         this.isLoading = false;
+        this.changeDetectorRef.markForCheck();
       },
     });
   }
@@ -45,6 +51,7 @@ export class UnitsListPage implements OnInit {
     this.hospitalMockService.searchUnits(value).subscribe({
       next: (units) => {
         this.filteredUnits = units;
+        this.changeDetectorRef.markForCheck();
       },
       error: (error) => {
         console.error('Falha ao buscar unidades:', error);

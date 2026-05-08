@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, from } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 /**
@@ -88,7 +88,8 @@ export class HospitalMockService {
   ];
 
   constructor(private http: HttpClient) {
-    this.initializeGeolocation();
+    // Temporarily disabled - geolocation initialization might be causing issues
+    // this.initializeGeolocation();
   }
 
   /**
@@ -107,8 +108,6 @@ export class HospitalMockService {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-        // Limpar cache para buscar novos dados com geolocalização
-        this.cachedUnits = null;
       },
       (error) => {
         console.warn('Permissão de geolocalização negada ou indisponível:', error);
@@ -141,10 +140,7 @@ export class HospitalMockService {
    * Se geolocalização estiver disponível, inclui para cálculo e ordenação de distância.
    */
   getUnits(): Observable<UnitCard[]> {
-    // Retornar unidades em cache se disponível
-    if (this.cachedUnits) {
-      return of(this.cachedUnits);
-    }
+    console.error('[MEDTIME-DEBUG] getUnits() called - making API request');
 
     // Construir parâmetros de query com geolocalização se disponível
     let url = `${this.apiUrl}/unidades/`;
@@ -157,14 +153,17 @@ export class HospitalMockService {
       url = `${url}?${params.toString()}`;
     }
 
+    console.error('[MEDTIME-DEBUG] Fetching from URL:', url);
     return this.http.get<BackendUnit[]>(url).pipe(
-      map((backendUnits) => {
-        const mapped = backendUnits.map((unit) => this.mapBackendUnit(unit));
-        this.cachedUnits = mapped;
-        return mapped;
+      tap((data: BackendUnit[]) => {
+        console.error('[MEDTIME-DEBUG] Got response with', data.length, 'units');
+        this.cachedUnits = data.map((unit) => this.mapBackendUnit(unit));
+      }),
+      map((backendUnits: BackendUnit[]) => {
+        return backendUnits.map((unit) => this.mapBackendUnit(unit));
       }),
       catchError((error) => {
-        console.error('Erro ao buscar unidades:', error);
+        console.error('[MEDTIME-DEBUG] Error occurred:', error);
         return of([]);
       })
     );
