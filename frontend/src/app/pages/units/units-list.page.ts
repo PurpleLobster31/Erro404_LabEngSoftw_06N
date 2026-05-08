@@ -33,7 +33,7 @@ export class UnitsListPage implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load units:', error);
+        console.error('Falha ao carregar unidades:', error);
         this.errorMessage = 'Falha ao carregar unidades. Tente novamente.';
         this.isLoading = false;
       },
@@ -47,7 +47,7 @@ export class UnitsListPage implements OnInit {
         this.filteredUnits = units;
       },
       error: (error) => {
-        console.error('Failed to search units:', error);
+        console.error('Falha ao buscar unidades:', error);
         this.errorMessage = 'Falha ao buscar unidades.';
       },
     });

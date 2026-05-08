@@ -40,7 +40,7 @@ class _FakeAsyncSession:
         self._rows = rows
 
     async def execute(self, query):
-        # The detail endpoint filters by Unidade.id; reproduce that behavior in tests.
+        # O endpoint de detalhe filtra por Unidade.id; reproduzir esse comportamento nos testes.
         filtered_rows = self._rows
         where_clauses = list(getattr(query, "_where_criteria", []))
         if where_clauses:

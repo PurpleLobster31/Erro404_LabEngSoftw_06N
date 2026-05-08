@@ -5,8 +5,8 @@ import { map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 /**
- * Represents a hospital unit from the backend API.
- * This matches the response structure from GET /unidades/
+ * Representa uma unidade hospitalar da API backend.
+ * Corresponde à estrutura de resposta de GET /unidades/
  */
 export interface BackendUnit {
   id: number;
@@ -17,18 +17,18 @@ export interface BackendUnit {
   tempo_medio_total: number;
   latitude: number;
   longitude: number;
-  distancia_metros?: number; // Present only when geolocation filtering is used
+  distancia_metros?: number; // Presente apenas quando filtro geográfico é usado
 }
 
 /**
- * Frontend representation of a hospital unit.
- * Simplified for UI display without mock data.
+ * Representação frontend de uma unidade hospitalar.
+ * Simplificada para exibição na UI sem dados mockados.
  */
 export interface UnitCard {
   id: number;
   name: string;
   address: string;
-  waitMinutes: number; // tempo_medio_total from backend
+  waitMinutes: number; // tempo_medio_total do backend
   distanceKm: number;
   latitude: number;
   longitude: number;
@@ -92,12 +92,12 @@ export class HospitalMockService {
   }
 
   /**
-   * Attempts to get user's geolocation for distance calculations.
-   * Silently fails if permission denied.
+   * Tenta obter a geolocalização do usuário para cálculos de distância.
+   * Falha silenciosamente se a permissão for negada.
    */
   private initializeGeolocation(): void {
     if (!navigator.geolocation) {
-      console.warn('Geolocation not supported');
+        console.warn('Geolocalização não suportada');
       return;
     }
 
@@ -107,18 +107,18 @@ export class HospitalMockService {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };
-        // Clear cache to fetch new data with geolocation
+        // Limpar cache para buscar novos dados com geolocalização
         this.cachedUnits = null;
       },
       (error) => {
-        console.warn('Geolocation permission denied or unavailable:', error);
+        console.warn('Permissão de geolocalização negada ou indisponível:', error);
       },
       { timeout: 5000, enableHighAccuracy: false }
     );
   }
 
   /**
-   * Maps a backend unit to a frontend UnitCard.
+   * Mapeia uma unidade backend para um UnitCard frontend.
    */
   private mapBackendUnit(backendUnit: BackendUnit): UnitCard {
     return {
@@ -137,16 +137,16 @@ export class HospitalMockService {
   }
 
   /**
-   * Fetches units from the backend API.
-   * If geolocation is available, includes it for distance calculation and ordering.
+   * Busca unidades da API backend.
+   * Se geolocalização estiver disponível, inclui para cálculo e ordenação de distância.
    */
   getUnits(): Observable<UnitCard[]> {
-    // Return cached units if available
+    // Retornar unidades em cache se disponível
     if (this.cachedUnits) {
       return of(this.cachedUnits);
     }
 
-    // Build query parameters with geolocation if available
+    // Construir parâmetros de query com geolocalização se disponível
     let url = `${this.apiUrl}/unidades/`;
     if (this.userLocation) {
       const params = new URLSearchParams({
@@ -164,27 +164,27 @@ export class HospitalMockService {
         return mapped;
       }),
       catchError((error) => {
-        console.error('Error fetching units:', error);
+        console.error('Erro ao buscar unidades:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * Fetches a single unit by ID.
+   * Busca uma unidade única por ID.
    */
   getUnitById(id: number): Observable<UnitCard | undefined> {
     return this.http.get<BackendUnit>(`${this.apiUrl}/unidades/${id}`).pipe(
       map((backendUnit) => this.mapBackendUnit(backendUnit)),
       catchError((error) => {
-        console.error(`Error fetching unit ${id}:`, error);
+        console.error(`Erro ao buscar a unidade ${id}:`, error);
         return of(undefined);
       })
     );
   }
 
   /**
-   * Searches units by name or address.
+   * Busca unidades por nome ou endereço.
    */
   searchUnits(query: string): Observable<UnitCard[]> {
     return this.getUnits().pipe(
@@ -205,7 +205,7 @@ export class HospitalMockService {
   }
 
   /**
-   * Refreshes units list, forcing new API call and attempting geolocation recheck.
+   * Atualiza lista de unidades, forçando nova chamada de API e tentando recheck de geolocalização.
    */
   refreshUnits(): Observable<UnitCard[]> {
     this.cachedUnits = null;
@@ -214,8 +214,8 @@ export class HospitalMockService {
   }
 
   /**
-   * Returns attendance history (currently static mock data).
-   * TODO: Replace with API call when endpoint is available.
+   * Retorna histórico de atendimentos (atualmente dados estáticos mockados).
+   * TODO: Substituir com chamada de API quando endpoint estiver disponível.
    */
   getAttendanceHistory(): AttendanceRecord[] {
     return this.attendanceRecords;

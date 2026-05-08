@@ -37,7 +37,7 @@ export class UnitDetailPage implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load unit:', error);
+        console.error('Falha ao carregar unidade:', error);
         this.errorMessage = 'Falha ao carregar unidade. Tente novamente.';
         this.isLoading = false;
       },

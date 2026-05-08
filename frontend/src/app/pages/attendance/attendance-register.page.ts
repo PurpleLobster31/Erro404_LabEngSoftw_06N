@@ -38,7 +38,7 @@ export class AttendanceRegisterPage implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load units:', error);
+        console.error('Falha ao carregar unidades:', error);
         this.errorMessage = 'Falha ao carregar unidades.';
         this.isLoading = false;
       },
@@ -47,10 +47,10 @@ export class AttendanceRegisterPage implements OnInit {
 
   private initializeForm(): void {
     const now = new Date();
-    const arrivalTime = new Date(now.getTime() - 60 * 60000); // 1 hour ago
+    const arrivalTime = new Date(now.getTime() - 60 * 60000); // 1 hora atrás
 
     this.form = this.formBuilder.group({
-      patientId: [1, Validators.required], // Mock patient ID
+      patientId: [1, Validators.required], // ID de paciente replicado
       unitId: ['', Validators.required],
       arrivalTime: [this.formatDateTime(arrivalTime), Validators.required],
       triageTime: ['', [Validators.required]],
@@ -93,7 +93,7 @@ export class AttendanceRegisterPage implements OnInit {
         : null,
     };
 
-    // Validate chronological order
+    // Validar ordem cronológica
     const arrivalTs = new Date(payload.horario_chegada).getTime();
     const triageTs = payload.horario_triagem
       ? new Date(payload.horario_triagem).getTime()
@@ -114,7 +114,7 @@ export class AttendanceRegisterPage implements OnInit {
       return;
     }
 
-    // Simulate API call
+    // Simular chamada de API
     setTimeout(() => {
       this.isSaving = false;
       this.successMessage =
@@ -132,7 +132,7 @@ export class AttendanceRegisterPage implements OnInit {
   }
 
   private formatDateTime(date: Date): string {
-    // Format as ISO string without milliseconds, suitable for datetime-local input
+    // Formatar como string ISO sem milissegundos, adequado para entrada datetime-local
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
