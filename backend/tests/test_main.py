@@ -1,8 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
+from datetime import datetime, timedelta
 
 from backend.app.main import app
 from backend.database.database import get_db
+from backend.app.schemas.atendimento import StatusAtendimento
 
 
 class _FakeMappings:
@@ -22,6 +24,15 @@ class _FakeResult:
 
     def mappings(self):
         return _FakeMappings(self._rows)
+
+    def scalar(self):
+        return self._rows[0] if self._rows else None
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return self._rows
 
 
 class _FakeAsyncSession:
@@ -119,3 +130,4 @@ def test_obter_unidade_inexistente_retorna_404(client):
 def test_unidades_query_param_invalido_retorna_422(client):
     response = client.get("/unidades/?lat=abc")
     assert response.status_code == 422
+

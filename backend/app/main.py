@@ -8,7 +8,7 @@ app = FastAPI(
 )
  
 app.include_router(unidades.router)
-# app.include_router(atendimentos.router)
+app.include_router(atendimentos.router)
 # app.include_router(pacientes.router)
  
  

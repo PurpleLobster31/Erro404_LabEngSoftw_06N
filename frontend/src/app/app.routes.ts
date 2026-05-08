@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AttendanceHistoryPage } from './pages/attendance/attendance-history.page';
+import { AttendanceRegisterPage } from './pages/attendance/attendance-register.page';
 import { ProfilePage } from './pages/profile/profile.page';
 import { UnitDetailPage } from './pages/units/unit-detail.page';
 import { UnitsListPage } from './pages/units/units-list.page';
@@ -21,6 +22,10 @@ export const routes: Routes = [
 	{
 		path: 'historico',
 		component: AttendanceHistoryPage,
+	},
+	{
+		path: 'registrar-atendimento',
+		component: AttendanceRegisterPage,
 	},
 	{
 		path: 'perfil',

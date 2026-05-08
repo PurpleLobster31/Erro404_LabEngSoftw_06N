@@ -1,0 +1,302 @@
+.attendance-register-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+
+  .page-header {
+    margin-bottom: 32px;
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: #1a1a1a;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+  }
+
+  .back-button {
+    display: inline-block;
+    padding: 8px;
+    margin-bottom: 16px;
+    font-size: 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #666;
+    text-decoration: none;
+
+    &:hover {
+      color: #333;
+    }
+  }
+
+  .success-message,
+  .error-message {
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-size: 14px;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .success-message {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  .error-message {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .step-container {
+    margin-bottom: 32px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      color: #1a1a1a;
+    }
+  }
+
+  .units-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .unit-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #1976d2;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+      background-color: #f5f5f5;
+    }
+
+    .unit-info {
+      text-align: left;
+      flex: 1;
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #1a1a1a;
+      }
+
+      .address {
+        font-size: 12px;
+        color: #999;
+        margin: 0 0 8px 0;
+      }
+
+      .metrics {
+        display: flex;
+        gap: 16px;
+        font-size: 13px;
+        color: #666;
+
+        span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+      }
+    }
+
+    .arrow {
+      font-size: 20px;
+      color: #999;
+      margin-left: 16px;
+    }
+  }
+
+  .selected-unit-banner {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+
+    .change-unit {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+  }
+
+  .attendance-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    .form-section {
+      margin-bottom: 24px;
+
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #1a1a1a;
+      }
+
+      .form-help {
+        font-size: 13px;
+        color: #666;
+        margin: 0 0 16px 0;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: #333;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: #1976d2;
+          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        &:disabled {
+          background-color: #f5f5f5;
+          color: #999;
+          cursor: not-allowed;
+        }
+      }
+
+      small {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #999;
+      }
+
+      .error-text {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #c62828;
+      }
+    }
+  }
+
+  .form-info {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 13px;
+
+    p {
+      margin: 0;
+      color: #1565c0;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &.primary-button {
+        background-color: #1976d2;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: #1565c0;
+          box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+        }
+
+        &:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
+        }
+      }
+
+      &.secondary-button {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+
+        &:hover {
+          background-color: #eeeeee;
+        }
+      }
+    }
+  }
+}

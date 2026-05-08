@@ -1,0 +1,132 @@
+<section class="page attendance-register-page">
+  <a routerLink="/historico" class="back-button" aria-label="Voltar para histórico">←</a>
+
+  <div class="page-header">
+    <h1>Registrar Atendimento</h1>
+    <p>Registre progressivamente os horários do seu atendimento</p>
+  </div>
+
+  @if (successMessage) {
+    <div class="success-message">
+      <p>{{ successMessage }}</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      <p>{{ errorMessage }}</p>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <p>Carregando unidades...</p>
+    </div>
+  } @else if (currentStep === 'select-unit') {
+    <div class="step-container">
+      <h2>Passo 1: Selecione a unidade</h2>
+
+      @if (units.length === 0) {
+        <div class="empty-state">
+          <p>Nenhuma unidade disponível</p>
+        </div>
+      } @else {
+        <div class="units-list">
+          @for (unit of units; track unit.id) {
+            <button
+              type="button"
+              class="unit-selector"
+              (click)="selectUnit(unit)"
+              aria-label="Selecionar unidade {{ unit.name }}"
+            >
+              <div class="unit-info">
+                <h3>{{ unit.name }}</h3>
+                <p class="address">{{ unit.address }}</p>
+                <div class="metrics">
+                  @if (unit.distanceKm > 0) {
+                    <span>📍 {{ unit.distanceKm }} Km</span>
+                  }
+                  <span>⏱ {{ unit.waitMinutes }} min</span>
+                </div>
+              </div>
+              <span class="arrow">→</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  } @else if (currentStep === 'register-times' && selectedUnit) {
+    <div class="step-container">
+      <div class="selected-unit-banner">
+        <button type="button" class="change-unit" (click)="goBack()">← Trocar unidade</button>
+        <h2>{{ selectedUnit.name }}</h2>
+        <p>{{ selectedUnit.address }}</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="attendance-form">
+        <div class="form-section">
+          <h3>Horários do Atendimento</h3>
+          <p class="form-help">Preencha os horários conforme se movimentar entre triagem e atendimento</p>
+
+          <div class="form-group">
+            <label for="arrivalTime">Horário de Chegada *</label>
+            <input
+              type="datetime-local"
+              id="arrivalTime"
+              formControlName="arrivalTime"
+              class="form-input"
+              [disabled]="true"
+              title="Horário de chegada (definido automaticamente)"
+            />
+            <small>Definido como agora - 1 hora</small>
+          </div>
+
+          <div class="form-group">
+            <label for="triageTime">Horário de Triagem *</label>
+            <input
+              type="datetime-local"
+              id="triageTime"
+              formControlName="triageTime"
+              class="form-input"
+              title="Horário quando você foi chamado para triagem"
+            />
+            <small>Deve ser posterior ao de chegada</small>
+            @if (form.get('triageTime')?.hasError('required')) {
+              <span class="error-text">Campo obrigatório</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="attendanceTime">Horário de Atendimento Médico</label>
+            <input
+              type="datetime-local"
+              id="attendanceTime"
+              formControlName="attendanceTime"
+              class="form-input"
+              title="Horário quando você foi chamado para atendimento médico (opcional)"
+            />
+            <small>Deixe em branco se ainda não foi atendido. Deve ser posterior ao de triagem.</small>
+          </div>
+        </div>
+
+        <div class="form-info">
+          <p>
+            <strong>Dica:</strong> Você pode salvar sem preencher o horário de atendimento. Quando tiver sido atendido,
+            volte e complete o registro.
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary-button" (click)="goBack()">Voltar</button>
+          <button type="submit" class="primary-button" [disabled]="isSaving || form.invalid">
+            @if (isSaving) {
+              Salvando...
+            } @else {
+              Salvar Atendimento
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>
