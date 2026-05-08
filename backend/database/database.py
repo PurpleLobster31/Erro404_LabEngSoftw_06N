@@ -5,7 +5,7 @@ import os
 # A string de conexão utiliza o driver +asyncpg
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql+asyncpg://dev_user:dev_password@localhost:5432/app_db"
+    "postgresql+asyncpg://dev_user:dev_password@db:5432/app_db"
 )
 
 # echo=True exibe as queries SQL no terminal (útil em dev)

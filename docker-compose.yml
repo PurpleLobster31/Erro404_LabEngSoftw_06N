@@ -50,6 +50,7 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/angular.json:/app/angular.json
+      - ./frontend/proxy.conf.json:/app/proxy.conf.json
     networks:
       - medtime-network
 
