@@ -25,20 +25,16 @@ export class UnitsListPage implements OnInit {
   }
 
   private loadUnits(): void {
-    console.error('[MEDTIME-DEBUG] loadUnits() called');
     this.isLoading = true;
     this.errorMessage = null;
     this.hospitalMockService.getUnits().subscribe({
       next: (units) => {
-        console.error('[MEDTIME-DEBUG] Subscription received', units.length, 'units');
         this.filteredUnits = units;
         this.hasGeolocation = units.length > 0 && units.some((u) => u.distanceKm > 0);
         this.isLoading = false;
         this.changeDetectorRef.markForCheck(); // Explicitly trigger change detection
       },
-      error: (error) => {
-        console.error('[MEDTIME-DEBUG] Subscription error:', error);
-        console.error('Falha ao carregar unidades:', error);
+      error: () => {
         this.errorMessage = 'Falha ao carregar unidades. Tente novamente.';
         this.isLoading = false;
         this.changeDetectorRef.markForCheck();
@@ -53,8 +49,7 @@ export class UnitsListPage implements OnInit {
         this.filteredUnits = units;
         this.changeDetectorRef.markForCheck();
       },
-      error: (error) => {
-        console.error('Falha ao buscar unidades:', error);
+      error: () => {
         this.errorMessage = 'Falha ao buscar unidades.';
       },
     });

@@ -25,13 +25,11 @@ export class UnitDetailPage implements OnInit {
 
   private loadUnit(): void {
     const unitId = Number(this.activatedRoute.snapshot.paramMap.get('id') ?? '1');
-    console.error('[MEDTIME-DEBUG] loadUnit() called for ID:', unitId);
     this.isLoading = true;
     this.errorMessage = null;
 
     this.hospitalMockService.getUnitById(unitId).subscribe({
       next: (unit) => {
-        console.error('[MEDTIME-DEBUG] Got unit:', unit);
         if (unit) {
           this.unit = unit;
         } else {
@@ -40,9 +38,7 @@ export class UnitDetailPage implements OnInit {
         this.isLoading = false;
         this.changeDetectorRef.markForCheck(); // Explicitly trigger change detection
       },
-      error: (error) => {
-        console.error('[MEDTIME-DEBUG] Error loading unit:', error);
-        console.error('Falha ao carregar unidade:', error);
+      error: () => {
         this.errorMessage = 'Falha ao carregar unidade. Tente novamente.';
         this.isLoading = false;
         this.changeDetectorRef.markForCheck();

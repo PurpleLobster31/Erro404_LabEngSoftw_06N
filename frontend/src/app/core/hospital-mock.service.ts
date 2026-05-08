@@ -98,7 +98,6 @@ export class HospitalMockService {
    */
   private initializeGeolocation(): void {
     if (!navigator.geolocation) {
-        console.warn('Geolocalização não suportada');
       return;
     }
 
@@ -109,8 +108,8 @@ export class HospitalMockService {
           longitude: position.coords.longitude,
         };
       },
-      (error) => {
-        console.warn('Permissão de geolocalização negada ou indisponível:', error);
+      () => {
+        // Geolocation permission denied or unavailable
       },
       { timeout: 5000, enableHighAccuracy: false }
     );
@@ -140,8 +139,6 @@ export class HospitalMockService {
    * Se geolocalização estiver disponível, inclui para cálculo e ordenação de distância.
    */
   getUnits(): Observable<UnitCard[]> {
-    console.error('[MEDTIME-DEBUG] getUnits() called - making API request');
-
     // Construir parâmetros de query com geolocalização se disponível
     let url = `${this.apiUrl}/unidades/`;
     if (this.userLocation) {
@@ -153,17 +150,14 @@ export class HospitalMockService {
       url = `${url}?${params.toString()}`;
     }
 
-    console.error('[MEDTIME-DEBUG] Fetching from URL:', url);
     return this.http.get<BackendUnit[]>(url).pipe(
       tap((data: BackendUnit[]) => {
-        console.error('[MEDTIME-DEBUG] Got response with', data.length, 'units');
         this.cachedUnits = data.map((unit) => this.mapBackendUnit(unit));
       }),
       map((backendUnits: BackendUnit[]) => {
         return backendUnits.map((unit) => this.mapBackendUnit(unit));
       }),
-      catchError((error) => {
-        console.error('[MEDTIME-DEBUG] Error occurred:', error);
+      catchError(() => {
         return of([]);
       })
     );
@@ -175,8 +169,7 @@ export class HospitalMockService {
   getUnitById(id: number): Observable<UnitCard | undefined> {
     return this.http.get<BackendUnit>(`${this.apiUrl}/unidades/${id}`).pipe(
       map((backendUnit) => this.mapBackendUnit(backendUnit)),
-      catchError((error) => {
-        console.error(`Erro ao buscar a unidade ${id}:`, error);
+      catchError(() => {
         return of(undefined);
       })
     );

@@ -37,8 +37,7 @@ export class AttendanceRegisterPage implements OnInit {
         this.units = units;
         this.isLoading = false;
       },
-      error: (error) => {
-        console.error('Falha ao carregar unidades:', error);
+      error: () => {
         this.errorMessage = 'Falha ao carregar unidades.';
         this.isLoading = false;
       },
