@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HospitalMockService } from '../../core/hospital-mock.service';
+import { HospitalMockService, UnitCard } from '../../core/hospital-mock.service';
 
 @Component({
   selector: 'app-unit-detail-page',
@@ -10,21 +10,40 @@ import { HospitalMockService } from '../../core/hospital-mock.service';
   templateUrl: './unit-detail.page.html',
   styleUrl: './unit-detail.page.scss',
 })
-export class UnitDetailPage {
+export class UnitDetailPage implements OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly hospitalMockService = inject(HospitalMockService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
-  protected readonly unit = this.getCurrentUnit();
+  protected unit: UnitCard | null = null;
+  protected isLoading = true;
+  protected errorMessage: string | null = null;
 
-  protected ratingText = this.unit.rating.toFixed(1);
-
-  private getCurrentUnit() {
-    const unitId = Number(this.activatedRoute.snapshot.paramMap.get('id') ?? '1');
-    return this.hospitalMockService.getUnitById(unitId) ?? this.hospitalMockService.getUnits()[0];
+  ngOnInit(): void {
+    this.loadUnit();
   }
 
-  ratingStars(rating: number): string {
-    const fullStars = Math.max(0, Math.min(5, Math.round(rating)));
-    return '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+  private loadUnit(): void {
+    const unitId = Number(this.activatedRoute.snapshot.paramMap.get('id') ?? '1');
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    this.hospitalMockService.getUnitById(unitId).subscribe({
+      next: (unit) => {
+        if (unit) {
+          this.unit = unit;
+        } else {
+          this.errorMessage = 'Unidade não encontrada.';
+        }
+        this.isLoading = false;
+        this.changeDetectorRef.markForCheck(); // Explicitly trigger change detection
+      },
+      error: () => {
+        this.errorMessage = 'Falha ao carregar unidade. Tente novamente.';
+        this.isLoading = false;
+        this.changeDetectorRef.markForCheck();
+      },
+    });
   }
 }
+

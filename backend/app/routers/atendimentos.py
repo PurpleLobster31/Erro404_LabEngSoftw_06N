@@ -1,86 +1,145 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas.atendimento import (
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from backend.database.database import get_db
+from backend.database.models import Atendimento, Paciente, Unidade
+from backend.app.schemas.atendimento import (
     AtendimentoCreate,
     AtendimentoUpdate,
     AtendimentoResponse,
     StatusAtendimento,
 )
-from app import database
 
 router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
 
 
 @router.post("/", response_model=AtendimentoResponse, status_code=201)
-def registrar_atendimento(payload: AtendimentoCreate):
-    
-    if payload.paciente_id not in database.pacientes_db:
+async def registrar_atendimento(
+    payload: AtendimentoCreate, db: AsyncSession = Depends(get_db)
+):
+    """
+    UC004 - Registrar evento de atendimento
+    Cria um novo atendimento com validação de cronologia.
+    Status: concluído se todos os horários forem preenchidos, caso contrário em_aberto.
+    """
+    # Verifica se paciente existe
+    paciente = await db.execute(select(Paciente).where(Paciente.id == payload.paciente_id))
+    if not paciente.scalar():
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
-    if payload.unidade_id not in database.unidades_db:
+
+    # Verifica se unidade existe
+    unidade = await db.execute(select(Unidade).where(Unidade.id == payload.unidade_id))
+    if not unidade.scalar():
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")
 
-    for at in database.atendimentos_db.values():
-        if at["paciente_id"] == payload.paciente_id and at["status"] == StatusAtendimento.em_aberto:
-            raise HTTPException(
-                status_code=409,
-                detail="Já existe um atendimento em aberto para este paciente.",
-            )
+    # Verifica se já existe atendimento em aberto para este paciente
+    em_aberto = await db.execute(
+        select(Atendimento).where(
+            (Atendimento.paciente_id == payload.paciente_id)
+            & (Atendimento.status == StatusAtendimento.em_aberto)
+        )
+    )
+    if em_aberto.scalar():
+        raise HTTPException(
+            status_code=409,
+            detail="Já existe um atendimento em aberto para este paciente.",
+        )
 
-    new_id = database.next_atendimento_id()
+    # Determina status baseado se todos os campos foram preenchidos
     status = (
         StatusAtendimento.concluido
         if payload.horario_atendimento
         else StatusAtendimento.em_aberto
     )
 
-    record = {
-        "id": new_id,
-        "paciente_id": payload.paciente_id,
-        "unidade_id": payload.unidade_id,
-        "horario_chegada": payload.horario_chegada,
-        "horario_triagem": payload.horario_triagem,
-        "horario_atendimento": payload.horario_atendimento,
-        "status": status,
-    }
-    database.atendimentos_db[new_id] = record
-    return record
+    novo_atendimento = Atendimento(
+        paciente_id=payload.paciente_id,
+        unidade_id=payload.unidade_id,
+        horario_chegada=payload.horario_chegada,
+        horario_triagem=payload.horario_triagem,
+        horario_atendimento=payload.horario_atendimento,
+        status=status,
+    )
+
+    db.add(novo_atendimento)
+    await db.commit()
+    await db.refresh(novo_atendimento)
+
+    return novo_atendimento
 
 
-@router.patch("/{atendimento_id}", response_model=AtendimentoResponse)
-def atualizar_atendimento(atendimento_id: int, payload: AtendimentoUpdate):
-    record = database.atendimentos_db.get(atendimento_id)
-    if not record:
+@router.put("/{atendimento_id}", response_model=AtendimentoResponse)
+async def atualizar_atendimento(
+    atendimento_id: int,
+    payload: AtendimentoUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    UC004 - Atualizar evento de atendimento (salvar parcial)
+    Permite atualizar horários individuais com validação de cronologia.
+    Transiciona para concluído quando horario_atendimento é preenchido.
+    """
+    # Busca o atendimento
+    result = await db.execute(
+        select(Atendimento).where(Atendimento.id == atendimento_id)
+    )
+    atendimento = result.scalar()
+
+    if not atendimento:
         raise HTTPException(status_code=404, detail="Atendimento não encontrado.")
-    if record["status"] == StatusAtendimento.concluido:
+
+    # Não permite atualização se já concluído
+    if atendimento.status == StatusAtendimento.concluido:
         raise HTTPException(status_code=409, detail="Atendimento já está concluído.")
 
-    if payload.horario_triagem:
-        if payload.horario_triagem <= record["horario_chegada"]:
+    # Valida e atualiza horário de triagem
+    if payload.horario_triagem is not None:
+        if payload.horario_triagem <= atendimento.horario_chegada:
             raise HTTPException(
                 status_code=422,
                 detail="Horário de triagem deve ser posterior ao de chegada.",
             )
-        record["horario_triagem"] = payload.horario_triagem
+        atendimento.horario_triagem = payload.horario_triagem
 
-    if payload.horario_atendimento:
-        if not record["horario_triagem"]:
+    # Valida e atualiza horário de atendimento
+    if payload.horario_atendimento is not None:
+        if not atendimento.horario_triagem:
             raise HTTPException(
                 status_code=422,
                 detail="Triagem deve ser registrada antes do atendimento médico.",
             )
-        if payload.horario_atendimento <= record["horario_triagem"]:
+        if payload.horario_atendimento <= atendimento.horario_triagem:
             raise HTTPException(
                 status_code=422,
                 detail="Horário de atendimento deve ser posterior ao de triagem.",
             )
-        record["horario_atendimento"] = payload.horario_atendimento
-        record["status"] = StatusAtendimento.concluido  # UC004 - Fluxo Alternativo: conclusão
+        atendimento.horario_atendimento = payload.horario_atendimento
+        # UC004 - Fluxo Alternativo: transiciona para concluído
+        atendimento.status = StatusAtendimento.concluido
 
-    return record
+    await db.commit()
+    await db.refresh(atendimento)
+
+    return atendimento
 
 
 @router.get("/paciente/{paciente_id}", response_model=list[AtendimentoResponse])
-def listar_atendimentos_paciente(paciente_id: int):
-    """Lista todos os atendimentos de um paciente."""
-    if paciente_id not in database.pacientes_db:
+async def listar_atendimentos_paciente(
+    paciente_id: int, db: AsyncSession = Depends(get_db)
+):
+    """
+    Lista todos os atendimentos de um paciente.
+    """
+    # Verifica se paciente existe
+    paciente = await db.execute(select(Paciente).where(Paciente.id == paciente_id))
+    if not paciente.scalar():
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
-    return [a for a in database.atendimentos_db.values() if a["paciente_id"] == paciente_id]
+
+    # Busca atendimentos
+    result = await db.execute(
+        select(Atendimento).where(Atendimento.paciente_id == paciente_id)
+    )
+    atendimentos = result.scalars().all()
+
+    return atendimentos
