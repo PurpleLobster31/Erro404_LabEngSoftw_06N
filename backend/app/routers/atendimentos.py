@@ -24,23 +24,23 @@ async def registrar_atendimento(
     Status: concluído se todos os horários forem preenchidos, caso contrário em_aberto.
     """
     # Verifica se paciente existe
-    paciente = await db.execute(select(Paciente).where(Paciente.id == payload.paciente_id))
-    if not paciente.scalar():
+    paciente_result = await db.execute(select(Paciente).where(Paciente.id == payload.paciente_id))
+    if paciente_result.scalar_one_or_none() is None:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
 
     # Verifica se unidade existe
-    unidade = await db.execute(select(Unidade).where(Unidade.id == payload.unidade_id))
-    if not unidade.scalar():
+    unidade_result = await db.execute(select(Unidade).where(Unidade.id == payload.unidade_id))
+    if unidade_result.scalar_one_or_none() is None:
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")
 
     # Verifica se já existe atendimento em aberto para este paciente
-    em_aberto = await db.execute(
+    em_aberto_result = await db.execute(
         select(Atendimento).where(
             (Atendimento.paciente_id == payload.paciente_id)
             & (Atendimento.status == StatusAtendimento.em_aberto)
         )
     )
-    if em_aberto.scalar():
+    if em_aberto_result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=409,
             detail="Já existe um atendimento em aberto para este paciente.",
@@ -49,7 +49,7 @@ async def registrar_atendimento(
     # Determina status baseado se todos os campos foram preenchidos
     status = (
         StatusAtendimento.concluido
-        if payload.horario_atendimento
+        if payload.horario_atendimento is not None
         else StatusAtendimento.em_aberto
     )
 
@@ -84,9 +84,9 @@ async def atualizar_atendimento(
     result = await db.execute(
         select(Atendimento).where(Atendimento.id == atendimento_id)
     )
-    atendimento = result.scalar()
+    atendimento: Atendimento | None = result.scalar_one_or_none()
 
-    if not atendimento:
+    if atendimento is None:
         raise HTTPException(status_code=404, detail="Atendimento não encontrado.")
 
     # Não permite atualização se já concluído
@@ -95,6 +95,13 @@ async def atualizar_atendimento(
 
     # Valida e atualiza horário de triagem
     if payload.horario_triagem is not None:
+        # Garante que o horário base existe antes da comparação
+        if atendimento.horario_chegada is None:
+            raise HTTPException(
+                status_code=422,
+                detail="Não é possível registrar triagem sem um horário de chegada.",
+            )
+            
         if payload.horario_triagem <= atendimento.horario_chegada:
             raise HTTPException(
                 status_code=422,
@@ -104,11 +111,13 @@ async def atualizar_atendimento(
 
     # Valida e atualiza horário de atendimento
     if payload.horario_atendimento is not None:
-        if not atendimento.horario_triagem:
+        # Garante que o horário base existe antes da comparação
+        if atendimento.horario_triagem is None:
             raise HTTPException(
                 status_code=422,
                 detail="Triagem deve ser registrada antes do atendimento médico.",
             )
+            
         if payload.horario_atendimento <= atendimento.horario_triagem:
             raise HTTPException(
                 status_code=422,
@@ -132,8 +141,8 @@ async def listar_atendimentos_paciente(
     Lista todos os atendimentos de um paciente.
     """
     # Verifica se paciente existe
-    paciente = await db.execute(select(Paciente).where(Paciente.id == paciente_id))
-    if not paciente.scalar():
+    paciente_result = await db.execute(select(Paciente).where(Paciente.id == paciente_id))
+    if paciente_result.scalar_one_or_none() is None:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
 
     # Busca atendimentos
