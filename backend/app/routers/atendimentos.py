@@ -2,9 +2,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, desc
 
-from geoalchemy2.elements import WKTElement
 from geoalchemy2.types import Geography
 
 from backend.database.database import get_db
@@ -205,20 +204,30 @@ async def avancar_etapa_atendimento(
 
 @router.get("/paciente/{paciente_id}", response_model=list[AtendimentoResponse])
 async def listar_atendimentos_paciente(
-    paciente_id: int, db: AsyncSession = Depends(get_db)
+    paciente_id: int, 
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Lista todos os atendimentos de um paciente.
+    Lista o histórico completo de atendimentos de um paciente.
+    Ordenado do mais recente para o mais antigo.
     """
-    # Verifica se paciente existe
-    paciente_result = await db.execute(select(Paciente).where(Paciente.id == paciente_id))
+    # 1. Verifica se o paciente existe
+    paciente_query = select(Paciente).where(Paciente.id == paciente_id)
+    paciente_result = await db.execute(paciente_query)
     if paciente_result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=404, detail="Paciente não encontrado.")
+        raise HTTPException(
+            status_code=404, 
+            detail="Paciente não encontrado."
+        )
 
-    # Busca atendimentos
-    result = await db.execute(
-        select(Atendimento).where(Atendimento.paciente_id == paciente_id)
+    # 2. Busca os atendimentos com ordenação decrescente por horário de chegada
+    query = (
+        select(Atendimento)
+        .where(Atendimento.paciente_id == paciente_id)
+        .order_by(desc(Atendimento.horario_chegada))
     )
+    
+    result = await db.execute(query)
     atendimentos = result.scalars().all()
 
     return atendimentos
