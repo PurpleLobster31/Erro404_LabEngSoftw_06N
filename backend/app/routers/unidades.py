@@ -165,6 +165,7 @@ async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
         Unidade.telefone2,
         Unidade.descricao,
         Unidade.horario_funcionamento,
+        Unidade.imagem_url,
         col_total,
         func.ST_Y(Unidade.localizacao).label('latitude'),
         func.ST_X(Unidade.localizacao).label('longitude')

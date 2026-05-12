@@ -12,7 +12,7 @@ class Unidade(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(index=True)
-    tipo: Mapped[str] = mapped_column()  # Ex: Hospital, UPA, UBS
+    tipo: Mapped[str] = mapped_column()  # Ex: Hospital, UPA, UBS, URSI
     
     # Endereço Detalhado
     endereco: Mapped[str] = mapped_column()
@@ -29,6 +29,8 @@ class Unidade(Base):
     # Metadados e Operação
     descricao: Mapped[str | None] = mapped_column()
     horario_funcionamento: Mapped[str | None] = mapped_column()
+
+    imagem_url: Mapped[str | None] = mapped_column()
     
     # Geoespacial (PostGIS)
     localizacao: Mapped[Geometry] = mapped_column(

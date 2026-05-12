@@ -14,6 +14,7 @@ class UnidadeBase(BaseModel):
     telefone2: Optional[str] = None
     descricao: Optional[str] = None
     horario_funcionamento: Optional[str] = None
+    imagem_url: Optional[str] = None
 
 class UnidadeCreate(UnidadeBase):
     # Latitude e longitude são necessárias para montar o POINT no banco na hora da criação
