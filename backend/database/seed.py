@@ -3,7 +3,9 @@ import random
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import delete
 
+from backend.app.schemas.atendimento import StatusAtendimento
 from backend.database.database import AsyncSessionLocal
 from backend.database.models import Unidade, Paciente, Atendimento
 
@@ -61,28 +63,34 @@ async def upsert_pacientes(session: AsyncSession):
     return pacientes_objs
 
 async def gerar_atendimentos(session: AsyncSession, unidades, pacientes, quantidade=50):
-    # Limpa atendimentos antigos para não duplicar massa de teste
-    # Remova se preferir acumular dados
+    # 1. Executa a limpeza da tabela para evitar duplicação a cada reinício
+    await session.execute(delete(Atendimento))
+    await session.flush()
+
     atendimentos = []
-    status_opcoes = ["Finalizado", "Em Atendimento", "Aguardando"]
+    # 2. Utiliza os status mapeados no sistema
+    status_opcoes = [StatusAtendimento.concluido, StatusAtendimento.em_aberto]
     agora = datetime.now()
 
     for _ in range(quantidade):
         u = random.choice(unidades)
         p = random.choice(pacientes)
         
-        # Simulação de tempos
+        # Simulação de tempos (1 a 8 horas atrás, garantindo que caia nas últimas 24h)
         chegada = agora - timedelta(minutes=random.randint(60, 480))
         espera_triagem = random.randint(10, 40)
         triagem = chegada + timedelta(minutes=espera_triagem)
         
-        # Nem todos foram atendidos ainda (para validar nulos)
         status = random.choice(status_opcoes)
         atendimento_medico = None
         
-        if status == "Finalizado":
+        # Se estiver concluído, precisa ter todos os horários
+        if status == StatusAtendimento.concluido:
             espera_medico = random.randint(20, 120)
             atendimento_medico = triagem + timedelta(minutes=espera_medico)
+        else:
+            # Se estiver em aberto, pode ou não ter passado pela triagem ainda
+            triagem = triagem if random.choice([True, False]) else None
 
         atendimentos.append(Atendimento(
             unidade_id=u.id,
