@@ -12,18 +12,29 @@ class Unidade(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     nome: Mapped[str] = mapped_column(index=True)
+    tipo: Mapped[str] = mapped_column()  # Ex: Hospital, UPA, UBS
+    
+    # Endereço Detalhado
     endereco: Mapped[str] = mapped_column()
-    tempo_medio_minutos: Mapped[float | None] = mapped_column()
+    numero: Mapped[str | None] = mapped_column()
+    complemento: Mapped[str | None] = mapped_column()
+    cep: Mapped[str | None] = mapped_column()
+    cidade: Mapped[str] = mapped_column()
+    estado: Mapped[str] = mapped_column()
     
-    # spatial_index=False impede a criação duplicada oculta
-    # Utilizando Any para evitar erros de tipagem com o retorno WKBElement do GeoAlchemy2
-    localizacao: Mapped[Any | None] = mapped_column(
-        Geometry(geometry_type='POINT', srid=4326, spatial_index=False)
+    # Contato
+    telefone1: Mapped[str] = mapped_column()
+    telefone2: Mapped[str | None] = mapped_column()
+    
+    # Metadados e Operação
+    descricao: Mapped[str | None] = mapped_column()
+    horario_funcionamento: Mapped[str | None] = mapped_column()
+    
+    # Geoespacial (PostGIS)
+    localizacao: Mapped[Geometry] = mapped_column(
+        Geometry(geometry_type='POINT', srid=4326),
+        nullable=False
     )
-
-    imagem: Mapped[bytes | None] = mapped_column()
-    
-    # Delega o gerenciamento do índice ao SQLAlchemy/Alembic
     __table_args__ = (
         Index('idx_unidades_localizacao', 'localizacao', postgresql_using='gist'),
     )

@@ -11,12 +11,76 @@ from backend.database.models import Unidade, Paciente, Atendimento
 
 async def upsert_unidades(session: AsyncSession):
     unidades_dados = [
-        {"nome": "Hospital das Clínicas da FMUSP", "endereco": "Av. Dr. Enéas Carvalho de Aguiar, 255", "tempo_medio_minutos": 120.0, "localizacao": "SRID=4326;POINT(-46.6678 -23.5574)"},
-        {"nome": "Santa Casa de Misericórdia de São Paulo", "endereco": "R. Dr. Cesário Mota Júnior, 112", "tempo_medio_minutos": 90.0, "localizacao": "SRID=4326;POINT(-46.6496 -23.5432)"},
-        {"nome": "Hospital São Paulo", "endereco": "R. Napoleão de Barros, 715", "tempo_medio_minutos": 105.0, "localizacao": "SRID=4326;POINT(-46.6443 -23.5975)"},
-        {"nome": "UPA Itaquera", "endereco": "Rua Píres do Rio, 134", "tempo_medio_minutos": 45.0, "localizacao": "SRID=4326;POINT(-46.4635 -23.5350)"},
-        {"nome": "Hospital Municipal M'Boi Mirim", "endereco": "Estr. do M'Boi Mirim, 5203", "tempo_medio_minutos": 150.0, "localizacao": "SRID=4326;POINT(-46.7725 -23.6811)"},
-        {"nome": "Hospital do Servidor Público Estadual", "endereco": "R. Pedro de Toledo, 1800", "tempo_medio_minutos": 60.0, "localizacao": "SRID=4326;POINT(-46.6548 -23.5955)"}
+        {
+            "nome": "Hospital das Clínicas da FMUSP",
+            "tipo": "Hospital",
+            "endereco": "Av. Dr. Enéas Carvalho de Aguiar",
+            "numero": "255",
+            "complemento": "Próximo ao Metrô Clínicas",
+            "cep": "05403-000",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2661-0000",
+            "descricao": "Maior complexo hospitalar da América Latina, referência em alta complexidade.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6678 -23.5574)"
+        },
+        {
+            "nome": "Santa Casa de Misericórdia de São Paulo",
+            "tipo": "Hospital",
+            "endereco": "R. Dr. Cesário Mota Júnior",
+            "numero": "112",
+            "complemento": "Vila Buarque",
+            "cep": "01221-020",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2176-7000",
+            "descricao": "Instituição filantrópica com pronto-socorro central de alto fluxo.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6496 -23.5432)"
+        },
+        {
+            "nome": "Hospital São Paulo",
+            "tipo": "Hospital",
+            "endereco": "R. Napoleão de Barros",
+            "numero": "715",
+            "complemento": "Vila Clementino",
+            "cep": "04024-002",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 5576-4000",
+            "descricao": "Hospital universitário da UNIFESP.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6443 -23.5975)"
+        },
+        {
+            "nome": "UPA Itaquera",
+            "tipo": "UPA",
+            "endereco": "Rua Pires do Rio",
+            "numero": "134",
+            "complemento": "Vila Carmosina",
+            "cep": "08240-002",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2070-5000",
+            "descricao": "Unidade de Pronto Atendimento 24h.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.4635 -23.5350)"
+        },
+        {
+            "nome": "Hospital Municipal M'Boi Mirim",
+            "tipo": "Hospital",
+            "endereco": "Estr. do M'Boi Mirim",
+            "numero": "5203",
+            "complemento": "Jardim Angela",
+            "cep": "04948-030",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 5832-2500",
+            "descricao": "Hospital de referência para a zona sul de São Paulo.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.7725 -23.6811)"
+        }
     ]
     
     unidades_objs = []

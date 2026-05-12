@@ -4,6 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy import func, and_
 from geoalchemy2.types import Geography
 
+from backend.app.schemas.unidade import UnidadeResponse
 from backend.database.database import get_db
 from backend.database.models import Unidade, Atendimento
 
@@ -96,9 +97,13 @@ async def listar_unidades(
     return unidades_formatadas
 
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=UnidadeResponse)
 async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
-    """Get a single unit by ID with calculated average times"""
+    """
+    Busca uma unidade pelo ID com cálculo dinâmico de tempos médios 
+    (baseado nos últimos 5 atendimentos) e metadados completos.
+    """
+
     # CTE 1: Últimos 5 tempos de triagem por unidade
     tempo_triagem_expr = (func.extract('epoch', Atendimento.horario_triagem - Atendimento.horario_chegada) / 60).label('tempo_triagem')
     rn_triagem = func.row_number().over(
@@ -139,23 +144,33 @@ async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
         func.avg(cte_atend_raw.c.tempo_atendimento).label('tempo_medio_atendimento')
     ).where(cte_atend_raw.c.rn <= 5).group_by(cte_atend_raw.c.unidade_id).cte('cte_atend_agg')
 
-    # Tratamento de valores nulos (COALESCE) para garantir que somas parciais funcionem
-    col_triagem = func.coalesce(cte_triagem_agg.c.tempo_medio_triagem, 0).label('tempo_medio_triagem')
-    col_atendimento = func.coalesce(cte_atend_agg.c.tempo_medio_atendimento, 0).label('tempo_medio_atendimento')
-    col_total = (func.coalesce(cte_triagem_agg.c.tempo_medio_triagem, 0) + func.coalesce(cte_atend_agg.c.tempo_medio_atendimento, 0)).label('tempo_medio_total')
+    # Expressão para o tempo total (Soma das médias)
+    col_total = (
+        func.coalesce(cte_triagem_agg.c.tempo_medio_triagem, 0) + 
+        func.coalesce(cte_atend_agg.c.tempo_medio_atendimento, 0)
+    ).label('tempo_medio_minutos')
 
+    # Query Principal com todos os campos do modelo atualizado
     query = select(
         Unidade.id,
         Unidade.nome,
+        Unidade.tipo,
         Unidade.endereco,
-        col_triagem,
-        col_atendimento,
+        Unidade.numero,
+        Unidade.complemento,
+        Unidade.cep,
+        Unidade.cidade,
+        Unidade.estado,
+        Unidade.telefone1,
+        Unidade.telefone2,
+        Unidade.descricao,
+        Unidade.horario_funcionamento,
         col_total,
         func.ST_Y(Unidade.localizacao).label('latitude'),
         func.ST_X(Unidade.localizacao).label('longitude')
     ).where(Unidade.id == id)
 
-    # Junção das métricas com a tabela de Unidades
+    # Joins com as agregações
     query = query.outerjoin(cte_triagem_agg, Unidade.id == cte_triagem_agg.c.unidade_id)
     query = query.outerjoin(cte_atend_agg, Unidade.id == cte_atend_agg.c.unidade_id)
 
@@ -165,4 +180,4 @@ async def obter_unidade(id: int, db: AsyncSession = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Unidade não encontrada")
     
-    return dict(row)
+    return row
