@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from datetime import datetime, timedelta
 
 from backend.database.database import get_db
 from backend.database.models import Atendimento, Paciente, Unidade
@@ -9,9 +10,53 @@ from backend.app.schemas.atendimento import (
     AtendimentoUpdate,
     AtendimentoResponse,
     StatusAtendimento,
+    AtendimentoGet,
+    AtendimentoStatusResponse
 )
 
 router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
+
+
+
+@router.get("/ativo", response_model=AtendimentoStatusResponse)
+async def buscar_atendimento_ativo(
+    payload: AtendimentoGet = Depends(),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Busca se existe um atendimento em aberto para o paciente em uma unidade nas últimas 24 horas.
+    Retorna o estado atualizado para controle de interface (botões).
+    """
+    limite_tempo = datetime.now() - timedelta(hours=24)
+
+    query = select(Atendimento).where(
+        Atendimento.paciente_id == payload.paciente_id,
+        Atendimento.unidade_id == payload.unidade_id,
+        Atendimento.status == StatusAtendimento.em_aberto,
+        Atendimento.horario_chegada >= limite_tempo
+    )
+    
+    result = await db.execute(query)
+    atendimento: Atendimento | None = result.scalar_one_or_none()
+
+    # Se não houver atendimento, o estado inicial é o registro de entrada
+    if atendimento is None:
+        return AtendimentoStatusResponse(
+            ativo=False,
+            label_botao="Registrar Entrada"
+        )
+
+    # Deduz o rótulo do botão com base nos horários já preenchidos
+    if atendimento.horario_triagem is None:
+        label = "Registrar Triagem"
+    else:
+        label = "Registrar Atendimento Médico"
+
+    return AtendimentoStatusResponse(
+        ativo=True,
+        atendimento_id=atendimento.id,
+        label_botao=label
+    )
 
 
 @router.post("/", response_model=AtendimentoResponse, status_code=201)

@@ -44,3 +44,12 @@ class AtendimentoResponse(BaseModel):
     status: StatusAtendimento
 
     model_config = {"from_attributes": True}
+
+class AtendimentoGet(BaseModel):
+    paciente_id: int
+    unidade_id: int
+
+class AtendimentoStatusResponse(BaseModel):
+    ativo: bool
+    atendimento_id: int | None = None
+    label_botao: str
