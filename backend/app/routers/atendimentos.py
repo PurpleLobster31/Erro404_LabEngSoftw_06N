@@ -1,18 +1,26 @@
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from datetime import datetime, timedelta
+from sqlalchemy import func
+
+from geoalchemy2.elements import WKTElement
+from geoalchemy2.types import Geography
 
 from backend.database.database import get_db
 from backend.database.models import Atendimento, Paciente, Unidade
 from backend.app.schemas.atendimento import (
     AtendimentoCreate,
-    AtendimentoUpdate,
+    AtendimentoAvancar,
     AtendimentoResponse,
     StatusAtendimento,
     AtendimentoGet,
     AtendimentoStatusResponse
 )
+
+
+# Constante de distância em metros para validação de proximidade
+RAIO_PERMITIDO_METROS = 100.0
 
 router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
 
@@ -64,21 +72,46 @@ async def registrar_atendimento(
     payload: AtendimentoCreate, db: AsyncSession = Depends(get_db)
 ):
     """
-    UC004 - Registrar evento de atendimento
-    Cria um novo atendimento com validação de cronologia.
-    Status: concluído se todos os horários forem preenchidos, caso contrário em_aberto.
+    UC004 - Iniciar atendimento.
+    Cria registro inicial (chegada) mediante validação geográfica.
     """
-    # Verifica se paciente existe
+    # 1. Verifica se paciente existe
     paciente_result = await db.execute(select(Paciente).where(Paciente.id == payload.paciente_id))
     if paciente_result.scalar_one_or_none() is None:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
 
-    # Verifica se unidade existe
+    # 2. Verifica se unidade existe e valida a distância geográfica
     unidade_result = await db.execute(select(Unidade).where(Unidade.id == payload.unidade_id))
-    if unidade_result.scalar_one_or_none() is None:
+    unidade = unidade_result.scalar_one_or_none()
+    
+    if unidade is None:
         raise HTTPException(status_code=404, detail="Unidade não encontrada.")
 
-    # Verifica se já existe atendimento em aberto para este paciente
+    # 2. Validação geográfica baseada na unidade atrelada ao atendimento
+    ponto_paciente = func.ST_SetSRID(
+        func.ST_MakePoint(payload.longitude, payload.latitude), 
+        4326
+    )
+
+    # Executa a validação ST_DWithin no banco de dados
+    distancia_valida_query = select(
+        func.ST_DWithin(
+            func.cast(Unidade.localizacao, Geography(geometry_type='POINT', srid=4326)),
+            func.cast(ponto_paciente, Geography(geometry_type='POINT', srid=4326)),
+            RAIO_PERMITIDO_METROS
+        )
+    ).where(Unidade.id == payload.unidade_id) # Atenção: no PATCH, use atendimento.unidade_id
+    
+    distancia_result = await db.execute(distancia_valida_query)
+    is_within_radius = distancia_result.scalar()
+
+    if not is_within_radius:
+        raise HTTPException(
+            status_code=403, 
+            detail="Paciente fora do raio permitido para registrar entrada nesta unidade."
+        )
+
+    # 3. Verifica se já existe atendimento em aberto
     em_aberto_result = await db.execute(
         select(Atendimento).where(
             (Atendimento.paciente_id == payload.paciente_id)
@@ -91,20 +124,14 @@ async def registrar_atendimento(
             detail="Já existe um atendimento em aberto para este paciente.",
         )
 
-    # Determina status baseado se todos os campos foram preenchidos
-    status = (
-        StatusAtendimento.concluido
-        if payload.horario_atendimento is not None
-        else StatusAtendimento.em_aberto
-    )
-
+    # 4. Grava o horário de chegada
     novo_atendimento = Atendimento(
         paciente_id=payload.paciente_id,
         unidade_id=payload.unidade_id,
-        horario_chegada=payload.horario_chegada,
-        horario_triagem=payload.horario_triagem,
-        horario_atendimento=payload.horario_atendimento,
-        status=status,
+        status=StatusAtendimento.em_aberto,
+        horario_chegada=datetime.now(),
+        horario_triagem=None,
+        horario_atendimento=None,
     )
 
     db.add(novo_atendimento)
@@ -114,63 +141,61 @@ async def registrar_atendimento(
     return novo_atendimento
 
 
-@router.put("/{atendimento_id}", response_model=AtendimentoResponse)
-async def atualizar_atendimento(
+@router.patch("/{atendimento_id}/avancar-etapa", response_model=AtendimentoResponse)
+async def avancar_etapa_atendimento(
     atendimento_id: int,
-    payload: AtendimentoUpdate,
+    payload: AtendimentoAvancar,
     db: AsyncSession = Depends(get_db),
 ):
     """
-    UC004 - Atualizar evento de atendimento (salvar parcial)
-    Permite atualizar horários individuais com validação de cronologia.
-    Transiciona para concluído quando horario_atendimento é preenchido.
+    UC004 - Avançar etapa do atendimento.
+    Transiciona o estado cronológico mediante validação geográfica.
     """
-    # Busca o atendimento
-    result = await db.execute(
-        select(Atendimento).where(Atendimento.id == atendimento_id)
-    )
+    # 1. Busca o atendimento
+    result = await db.execute(select(Atendimento).where(Atendimento.id == atendimento_id))
     atendimento: Atendimento | None = result.scalar_one_or_none()
 
     if atendimento is None:
         raise HTTPException(status_code=404, detail="Atendimento não encontrado.")
 
-    # Não permite atualização se já concluído
     if atendimento.status == StatusAtendimento.concluido:
-        raise HTTPException(status_code=409, detail="Atendimento já está concluído.")
+        raise HTTPException(status_code=409, detail="Este atendimento já foi concluído.")
 
-    # Valida e atualiza horário de triagem
-    if payload.horario_triagem is not None:
-        # Garante que o horário base existe antes da comparação
-        if atendimento.horario_chegada is None:
-            raise HTTPException(
-                status_code=422,
-                detail="Não é possível registrar triagem sem um horário de chegada.",
-            )
-            
-        if payload.horario_triagem <= atendimento.horario_chegada:
-            raise HTTPException(
-                status_code=422,
-                detail="Horário de triagem deve ser posterior ao de chegada.",
-            )
-        atendimento.horario_triagem = payload.horario_triagem
+    # 2. Validação geográfica baseada na unidade atrelada ao atendimento
+    ponto_paciente = func.ST_SetSRID(
+        func.ST_MakePoint(payload.longitude, payload.latitude), 
+        4326
+    )
 
-    # Valida e atualiza horário de atendimento
-    if payload.horario_atendimento is not None:
-        # Garante que o horário base existe antes da comparação
-        if atendimento.horario_triagem is None:
-            raise HTTPException(
-                status_code=422,
-                detail="Triagem deve ser registrada antes do atendimento médico.",
-            )
-            
-        if payload.horario_atendimento <= atendimento.horario_triagem:
-            raise HTTPException(
-                status_code=422,
-                detail="Horário de atendimento deve ser posterior ao de triagem.",
-            )
-        atendimento.horario_atendimento = payload.horario_atendimento
-        # UC004 - Fluxo Alternativo: transiciona para concluído
+    # Executa a validação ST_DWithin no banco de dados
+    distancia_valida_query = select(
+        func.ST_DWithin(
+            func.cast(Unidade.localizacao, Geography(geometry_type='POINT', srid=4326)),
+            func.cast(ponto_paciente, Geography(geometry_type='POINT', srid=4326)),
+            RAIO_PERMITIDO_METROS
+        )
+    ).where(Unidade.id == atendimento.unidade_id)
+    
+    distancia_result = await db.execute(distancia_valida_query)
+    is_within_radius = distancia_result.scalar()
+
+    if not is_within_radius:
+        raise HTTPException(
+            status_code=403, 
+            detail="Paciente fora do raio permitido para registrar o andamento nesta unidade."
+        )
+
+    # 3. Máquina de estado cronológica
+    agora = datetime.now()
+
+    if atendimento.horario_triagem is None:
+        atendimento.horario_triagem = agora
+    elif atendimento.horario_atendimento is None:
+        atendimento.horario_atendimento = agora
         atendimento.status = StatusAtendimento.concluido
+    else:
+        # Fallback de segurança lógica
+        raise HTTPException(status_code=422, detail="Todas as etapas de horário já foram registradas.")
 
     await db.commit()
     await db.refresh(atendimento)
