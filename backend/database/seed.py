@@ -3,18 +3,84 @@ import random
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import delete
 
+from backend.app.schemas.atendimento import StatusAtendimento
 from backend.database.database import AsyncSessionLocal
 from backend.database.models import Unidade, Paciente, Atendimento
 
 async def upsert_unidades(session: AsyncSession):
     unidades_dados = [
-        {"nome": "Hospital das Clínicas da FMUSP", "endereco": "Av. Dr. Enéas Carvalho de Aguiar, 255", "tempo_medio_minutos": 120.0, "localizacao": "SRID=4326;POINT(-46.6678 -23.5574)"},
-        {"nome": "Santa Casa de Misericórdia de São Paulo", "endereco": "R. Dr. Cesário Mota Júnior, 112", "tempo_medio_minutos": 90.0, "localizacao": "SRID=4326;POINT(-46.6496 -23.5432)"},
-        {"nome": "Hospital São Paulo", "endereco": "R. Napoleão de Barros, 715", "tempo_medio_minutos": 105.0, "localizacao": "SRID=4326;POINT(-46.6443 -23.5975)"},
-        {"nome": "UPA Itaquera", "endereco": "Rua Píres do Rio, 134", "tempo_medio_minutos": 45.0, "localizacao": "SRID=4326;POINT(-46.4635 -23.5350)"},
-        {"nome": "Hospital Municipal M'Boi Mirim", "endereco": "Estr. do M'Boi Mirim, 5203", "tempo_medio_minutos": 150.0, "localizacao": "SRID=4326;POINT(-46.7725 -23.6811)"},
-        {"nome": "Hospital do Servidor Público Estadual", "endereco": "R. Pedro de Toledo, 1800", "tempo_medio_minutos": 60.0, "localizacao": "SRID=4326;POINT(-46.6548 -23.5955)"}
+        {
+            "nome": "Hospital das Clínicas da FMUSP",
+            "tipo": "Hospital",
+            "endereco": "Av. Dr. Enéas Carvalho de Aguiar",
+            "numero": "255",
+            "complemento": "Próximo ao Metrô Clínicas",
+            "cep": "05403-000",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2661-0000",
+            "descricao": "Maior complexo hospitalar da América Latina, referência em alta complexidade.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6678 -23.5574)"
+        },
+        {
+            "nome": "Santa Casa de Misericórdia de São Paulo",
+            "tipo": "Hospital",
+            "endereco": "R. Dr. Cesário Mota Júnior",
+            "numero": "112",
+            "complemento": "Vila Buarque",
+            "cep": "01221-020",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2176-7000",
+            "descricao": "Instituição filantrópica com pronto-socorro central de alto fluxo.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6496 -23.5432)"
+        },
+        {
+            "nome": "Hospital São Paulo",
+            "tipo": "Hospital",
+            "endereco": "R. Napoleão de Barros",
+            "numero": "715",
+            "complemento": "Vila Clementino",
+            "cep": "04024-002",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 5576-4000",
+            "descricao": "Hospital universitário da UNIFESP.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.6443 -23.5975)"
+        },
+        {
+            "nome": "UPA Itaquera",
+            "tipo": "UPA",
+            "endereco": "Rua Pires do Rio",
+            "numero": "134",
+            "complemento": "Vila Carmosina",
+            "cep": "08240-002",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2070-5000",
+            "descricao": "Unidade de Pronto Atendimento 24h.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.4635 -23.5350)"
+        },
+        {
+            "nome": "Hospital Municipal M'Boi Mirim",
+            "tipo": "Hospital",
+            "endereco": "Estr. do M'Boi Mirim",
+            "numero": "5203",
+            "complemento": "Jardim Angela",
+            "cep": "04948-030",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 5832-2500",
+            "descricao": "Hospital de referência para a zona sul de São Paulo.",
+            "horario_funcionamento": "24 horas",
+            "localizacao": "SRID=4326;POINT(-46.7725 -23.6811)"
+        }
     ]
     
     unidades_objs = []
@@ -36,6 +102,7 @@ async def upsert_unidades(session: AsyncSession):
 
 async def upsert_pacientes(session: AsyncSession):
     pacientes_dados = [
+        {"id": 999, "nome": "Paciente", "sobrenome": "Teste", "email": "teste.atendimento@mock.com"},
         {"nome": "Mateus", "sobrenome": "Teles Magalhães", "email": "mateus.magalhaes@mock.com"},
         {"nome": "João", "sobrenome": "Silva", "email": "joao.silva@mock.com"},
         {"nome": "Maria", "sobrenome": "Oliveira", "email": "maria.oliveira@mock.com"},
@@ -61,28 +128,37 @@ async def upsert_pacientes(session: AsyncSession):
     return pacientes_objs
 
 async def gerar_atendimentos(session: AsyncSession, unidades, pacientes, quantidade=50):
-    # Limpa atendimentos antigos para não duplicar massa de teste
-    # Remova se preferir acumular dados
+    # 1. Executa a limpeza da tabela para evitar duplicação a cada reinício
+    await session.execute(delete(Atendimento))
+    await session.flush()
+
     atendimentos = []
-    status_opcoes = ["Finalizado", "Em Atendimento", "Aguardando"]
+    # 2. Utiliza os status mapeados no sistema
+    status_opcoes = [StatusAtendimento.concluido, StatusAtendimento.em_aberto]
     agora = datetime.now()
+    
+    # Remove o paciente 999 da seleção aleatória
+    pacientes_para_seed = [p for p in pacientes if p.id != 999]
 
     for _ in range(quantidade):
         u = random.choice(unidades)
-        p = random.choice(pacientes)
+        p = random.choice(pacientes_para_seed)
         
-        # Simulação de tempos
+        # Simulação de tempos (1 a 8 horas atrás, garantindo que caia nas últimas 24h)
         chegada = agora - timedelta(minutes=random.randint(60, 480))
         espera_triagem = random.randint(10, 40)
         triagem = chegada + timedelta(minutes=espera_triagem)
         
-        # Nem todos foram atendidos ainda (para validar nulos)
         status = random.choice(status_opcoes)
         atendimento_medico = None
         
-        if status == "Finalizado":
+        # Se estiver concluído, precisa ter todos os horários
+        if status == StatusAtendimento.concluido:
             espera_medico = random.randint(20, 120)
             atendimento_medico = triagem + timedelta(minutes=espera_medico)
+        else:
+            # Se estiver em aberto, pode ou não ter passado pela triagem ainda
+            triagem = triagem if random.choice([True, False]) else None
 
         atendimentos.append(Atendimento(
             unidade_id=u.id,

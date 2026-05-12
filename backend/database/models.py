@@ -1,60 +1,76 @@
-from sqlalchemy import Column, Integer, String, Float, Index, LargeBinary, ForeignKey, DateTime, Date
-from sqlalchemy.orm import relationship
+from datetime import date, datetime
+from typing import Any
+
+from sqlalchemy import Index, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from geoalchemy2 import Geometry
+
 from backend.database.database import Base
 
 class Unidade(Base):
     __tablename__ = "unidades"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String, nullable=False, index=True)
-    endereco = Column(String, nullable=False)
-    tempo_medio_minutos = Column(Float, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    nome: Mapped[str] = mapped_column(index=True)
+    tipo: Mapped[str] = mapped_column()  # Ex: Hospital, UPA, UBS, URSI
     
-    # spatial_index=False impede a criação duplicada oculta
-    localizacao = Column(
-        Geometry(geometry_type='POINT', srid=4326, spatial_index=False), 
-        nullable=True
-    )
+    # Endereço Detalhado
+    endereco: Mapped[str] = mapped_column()
+    numero: Mapped[str | None] = mapped_column()
+    complemento: Mapped[str | None] = mapped_column()
+    cep: Mapped[str | None] = mapped_column()
+    cidade: Mapped[str] = mapped_column()
+    estado: Mapped[str] = mapped_column()
+    
+    # Contato
+    telefone1: Mapped[str] = mapped_column()
+    telefone2: Mapped[str | None] = mapped_column()
+    
+    # Metadados e Operação
+    descricao: Mapped[str | None] = mapped_column()
+    horario_funcionamento: Mapped[str | None] = mapped_column()
 
-    imagem = Column(LargeBinary, nullable=True)
-    # Delega o gerenciamento do índice ao SQLAlchemy/Alembic
+    imagem_url: Mapped[str | None] = mapped_column()
+    
+    # Geoespacial (PostGIS)
+    localizacao: Mapped[Geometry] = mapped_column(
+        Geometry(geometry_type='POINT', srid=4326),
+        nullable=False
+    )
     __table_args__ = (
         Index('idx_unidades_localizacao', 'localizacao', postgresql_using='gist'),
     )
 
-    # Relacionamentos
-
     # Lado "Um" do relacionamento (Uma unidade tem muitos atendimentos)
-    atendimentos = relationship("Atendimento", back_populates="unidade")
+    atendimentos: Mapped[list["Atendimento"]] = relationship(back_populates="unidade")
+
 
 class Paciente(Base):
     __tablename__ = "pacientes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String, nullable=False)
-    sobrenome = Column(String, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    data_nascimento = Column(Date, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    nome: Mapped[str] = mapped_column()
+    sobrenome: Mapped[str] = mapped_column()
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    data_nascimento: Mapped[date | None] = mapped_column()
 
     # Relacionamentos
     # Lado "Um" do relacionamento
-    atendimentos = relationship("Atendimento", back_populates="paciente")
-    
+    atendimentos: Mapped[list["Atendimento"]] = relationship(back_populates="paciente")
+
 
 class Atendimento(Base):
     __tablename__ = "atendimentos"
 
-    id = Column(Integer, primary_key=True, index=True)
-    # nullable=False garante a obrigatoriedade no banco
-    unidade_id = Column(Integer, ForeignKey("unidades.id"), nullable=False)
-    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
-    status = Column(String, nullable=False)
-    horario_chegada = Column(DateTime, nullable=True)
-    horario_triagem = Column(DateTime, nullable=True)
-    horario_atendimento = Column(DateTime, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    unidade_id: Mapped[int] = mapped_column(ForeignKey("unidades.id"))
+    paciente_id: Mapped[int] = mapped_column(ForeignKey("pacientes.id"))
+    status: Mapped[str] = mapped_column()
+    horario_chegada: Mapped[datetime | None] = mapped_column()
+    horario_triagem: Mapped[datetime | None] = mapped_column()
+    horario_atendimento: Mapped[datetime | None] = mapped_column()
 
     # relacionamentos
     # Lado "Muitos" do relacionamento (Muitos atendimentos pertencem a uma unidade)
-    unidade = relationship("Unidade", back_populates="atendimentos")
-    paciente = relationship("Paciente", back_populates="atendimentos")
+    unidade: Mapped["Unidade"] = relationship(back_populates="atendimentos")
+    paciente: Mapped["Paciente"] = relationship(back_populates="atendimentos")
