@@ -38,6 +38,7 @@ async def upsert_unidades(session: AsyncSession):
 
 async def upsert_pacientes(session: AsyncSession):
     pacientes_dados = [
+        {"id": 999, "nome": "Paciente", "sobrenome": "Teste", "email": "teste.atendimento@mock.com"},
         {"nome": "Mateus", "sobrenome": "Teles Magalhães", "email": "mateus.magalhaes@mock.com"},
         {"nome": "João", "sobrenome": "Silva", "email": "joao.silva@mock.com"},
         {"nome": "Maria", "sobrenome": "Oliveira", "email": "maria.oliveira@mock.com"},
@@ -71,10 +72,13 @@ async def gerar_atendimentos(session: AsyncSession, unidades, pacientes, quantid
     # 2. Utiliza os status mapeados no sistema
     status_opcoes = [StatusAtendimento.concluido, StatusAtendimento.em_aberto]
     agora = datetime.now()
+    
+    # Remove o paciente 999 da seleção aleatória
+    pacientes_para_seed = [p for p in pacientes if p.id != 999]
 
     for _ in range(quantidade):
         u = random.choice(unidades)
-        p = random.choice(pacientes)
+        p = random.choice(pacientes_para_seed)
         
         # Simulação de tempos (1 a 8 horas atrás, garantindo que caia nas últimas 24h)
         chegada = agora - timedelta(minutes=random.randint(60, 480))
