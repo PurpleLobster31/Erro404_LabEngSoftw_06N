@@ -12,9 +12,10 @@ export interface BackendUnit {
   id: number;
   nome: string;
   endereco: string;
-  tempo_medio_triagem: number;
-  tempo_medio_atendimento: number;
-  tempo_medio_total: number;
+  tempo_medio_minutos?: number; // Campo retornado pelo backend
+  tempo_medio_triagem?: number;
+  tempo_medio_atendimento?: number;
+  tempo_medio_total?: number;
   latitude: number;
   longitude: number;
   distancia_metros?: number; // Presente apenas quando filtro geográfico é usado
@@ -119,11 +120,14 @@ export class HospitalMockService {
    * Mapeia uma unidade backend para um UnitCard frontend.
    */
   private mapBackendUnit(backendUnit: BackendUnit): UnitCard {
+    // Usa tempo_medio_total se disponível, caso contrário usa tempo_medio_minutos
+    const waitTime = backendUnit.tempo_medio_total ?? backendUnit.tempo_medio_minutos ?? 0;
+    
     return {
       id: backendUnit.id,
       name: backendUnit.nome,
       address: backendUnit.endereco,
-      waitMinutes: Math.round(backendUnit.tempo_medio_total),
+      waitMinutes: Math.round(waitTime),
       distanceKm: backendUnit.distancia_metros
         ? Math.round((backendUnit.distancia_metros / 1000) * 10) / 10
         : 0,
