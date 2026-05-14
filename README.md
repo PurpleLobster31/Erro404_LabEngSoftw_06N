@@ -1,127 +1,104 @@
-# MedTime - Aplicação de Tempo de Espera em Hospitais
+# MedTime — Monitoramento de Tempo de Espera em Hospitais
 
-Backend FastAPI + Frontend Angular + Banco de dados PostgreSQL.
+MedTime é uma aplicação que ajuda pacientes a visualizar tempos médios de espera em unidades de pronto atendimento e registrar etapas do atendimento em tempo real. O projeto está organizado em backend FastAPI, frontend Angular e banco PostgreSQL com PostGIS para geolocalização.
 
-## Início Rápido
+## Visão geral do funcionamento
 
-### Pré-requisitos
-- Docker e Docker Compose instalados
-- Git
+1. O frontend Angular lista unidades e seus tempos médios de espera.
+2. A API FastAPI consulta o banco com dados de atendimento e calcula tempos médios (últimos 5 registros).
+3. O paciente pode registrar entrada, triagem e atendimento médico em etapas, com validação de proximidade geográfica.
 
-### Executar Localmente
+## Casos de uso implementados
+
+- **UC001 — Verificar Tempo em Pronto Atendimento**  
+  Listagem de unidades com tempo médio de espera e ordenação por proximidade quando a geolocalização está disponível.
+
+- **UC004 — Registrar evento de atendimento (fluxo síncrono)**  
+  Registro por etapas (entrada → triagem → atendimento médico) com botão dinâmico e validação de raio (2 km).
+
+- **UC008 — Pesquisar Hospitais**  
+  Busca textual na lista de unidades, filtrando por nome e endereço no frontend.
+
+**Em evolução / mockados:** histórico de atendimentos, avaliações, favoritos e perfil do paciente estão representados no frontend como placeholders/mocks para próximas etapas.
+
+## Tecnologias
+
+**Backend**
+- Python + FastAPI (API REST)
+- SQLAlchemy async + Alembic (ORM e migrações)
+- GeoAlchemy2 + PostGIS (geolocalização e cálculo de distância)
+
+**Frontend**
+- Angular 21 (standalone components)
+
+**Banco de dados**
+- PostgreSQL 15 + PostGIS
+
+**Infra**
+- Docker + Docker Compose
+- **Deploy alvo: EC2** (frontend, backend e banco hospedados na mesma instância)
+
+## Principais endpoints da API
+
+- `GET /unidades` — Lista unidades (suporta `lat`, `lon`, `raio_km` para proximidade)
+- `GET /unidades/{id}` — Detalhes de uma unidade e tempo médio calculado
+- `GET /atendimentos/ativo` — Status do atendimento ativo (para controle do botão)
+- `POST /atendimentos` — Registrar entrada
+- `PATCH /atendimentos/{id}/avancar-etapa` — Registrar triagem/atendimento médico
+- `GET /atendimentos/paciente/{paciente_id}` — Histórico do paciente
+- `GET /health` — Health check
+
+## Executar localmente (Docker)
 
 ```bash
-# Clonar e entrar no repositório
-git clone <url-repo>
-cd Erro404_LabEngSoftw_06N
-
-# Iniciar todos os serviços
 docker-compose up -d
-
-# Aguarde ~15 segundos para as migrações serem concluídas
 sleep 15
-
-# Verificar se os serviços estão rodando
-curl http://localhost:8000/health    # Backend
-curl http://localhost:4200            # Frontend (no navegador)
 ```
 
-**Pontos de Acesso:**
+**Acessos locais:**
 - Frontend: http://localhost:4200
-- API Backend: http://localhost:8000
-- Documentação API: http://localhost:8000/docs
-- Banco de dados: localhost:5432 (dev_user / dev_password)
+- API: http://localhost:8000
+- Docs da API: http://localhost:8000/docs
 
-### Parar os Serviços
+**Proxy local do frontend:** o Angular usa `/api` como base e o `frontend/proxy.conf.json` encaminha para o backend no Docker.
 
-```bash
-docker-compose down
+## Dados iniciais
 
-# Remover todos os dados
-docker-compose down -v
-```
+No startup da API, um seed popula o banco com unidades, pacientes e atendimentos de exemplo. O paciente de teste usado no frontend possui ID `999`.
 
-## Desenvolvimento
+## Variáveis de ambiente padrão (docker-compose.yml)
 
-### Visualizar Logs
-```bash
-docker-compose logs -f                # Todos os serviços
-docker-compose logs -f backend        # Apenas backend
-docker-compose logs -f frontend       # Apenas frontend
-docker-compose logs -f db             # Apenas banco de dados
-```
+- `POSTGRES_USER`: `dev_user`
+- `POSTGRES_PASSWORD`: `dev_password`
+- `POSTGRES_DB`: `app_db`
+- `DATABASE_URL`: `postgresql+asyncpg://dev_user:dev_password@db:5432/app_db`
 
-### Acessar Containers
-```bash
-docker-compose exec backend bash      # Shell do backend
-docker-compose exec frontend bash     # Shell do frontend
-docker-compose exec db psql -U dev_user -d app_db  # Shell do banco de dados
-```
+## Geolocalização (modo mock)
 
-### Executar Testes
-```bash
-docker-compose exec -T backend python -m pytest
-```
+Para demonstrar o fluxo de registro sem GPS real, use `?geoloc-mock=true` na URL do frontend. O botão de registro ficará habilitado e a localização será simulada.
 
-## Arquitetura
+## Deploy no EC2 (alvo do projeto)
 
-- **Frontend**: Angular 21 standalone (porta 4200)
-- **Backend**: FastAPI async (porta 8000)  
-- **Banco de dados**: PostgreSQL 15 + PostGIS (porta 5432)
+O projeto foi pensado para publicar **todos os serviços em uma instância EC2** utilizando Docker:
 
-Todos os serviços se comunicam através da rede Docker `medtime-network`.
+1. Build das imagens (backend, frontend e PostGIS).
+2. Execução com Docker Compose na instância.
+3. Configurar reverse proxy (ex.: Nginx) para servir o frontend e encaminhar `/api` para o backend.
+4. Ajustar variáveis de ambiente para produção e habilitar HTTPS.
 
-## Configuração
-
-Variáveis de ambiente padrão (em `docker-compose.yml`):
-- `POSTGRES_USER`: dev_user
-- `POSTGRES_PASSWORD`: dev_password
-- `POSTGRES_DB`: app_db
-- `DATABASE_URL`: postgresql+asyncpg://dev_user:dev_password@db:5432/app_db
-
-## Solução de Problemas
-
-**Porta já em uso:**
-```bash
-docker-compose down -v
-docker-compose up -d
-```
-
-**Containers não iniciam:**
-```bash
-docker-compose logs          # Verificar logs
-docker ps -a                # Ver todos os containers
-```
-
-**Conexão com banco de dados falha:**
-O banco de dados leva ~15 segundos para inicializar. Aguarde e tente conectar novamente.
-
-## Para Deployment no AWS
-
-A aplicação está containerizada e pronta para deploy no AWS:
-- Todos os serviços estão definidos em `docker-compose.yml`
-- Use AWS ECS, EKS ou Fargate com os Dockerfiles fornecidos
-- Atualize as variáveis de ambiente para produção:
-  - `DATABASE_URL` - use endpoint do RDS
-  - URL da API do Frontend - aponte para backend em produção
-  - Ative HTTPS/TLS
-
-## Estrutura do Projeto
+## Estrutura do projeto
 
 ```
 .
-├── backend/              # Aplicação FastAPI
-├── frontend/             # Aplicação Angular
-├── alembic/              # Migrações do banco de dados
-├── Dockerfile.backend    # Container do backend
-├── frontend/Dockerfile   # Container do frontend
-├── docker-compose.yml    # Setup local
-└── README.md            # Este arquivo
+├── backend/              # API FastAPI
+├── frontend/             # Angular 21
+├── alembic/              # Migrações
+├── docker-compose.yml    # Ambiente local e EC2
+└── README.md
 ```
 
 ## Documentação
 
-- Backend: [UC001](docs/UC001.md), [UC004](docs/UC004.md), [UC008](docs/UC008.md)
+- Casos de uso: [docs/UC001.md](docs/UC001.md), [docs/UC004.md](docs/UC004.md), [docs/UC008.md](docs/UC008.md)
 - Arquitetura: [docs/arquitetura.md](docs/arquitetura.md)
 - Requisitos: [docs/Lista_Requisitos.md](docs/Lista_Requisitos.md)
-
