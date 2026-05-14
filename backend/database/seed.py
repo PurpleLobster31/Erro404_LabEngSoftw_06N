@@ -80,6 +80,20 @@ async def upsert_unidades(session: AsyncSession):
             "descricao": "Hospital de referência para a zona sul de São Paulo.",
             "horario_funcionamento": "24 horas",
             "localizacao": "SRID=4326;POINT(-46.7725 -23.6811)"
+        },
+        {
+            "nome": "Universidade Presbiteriana Mackenzie - Campus Higienópolis",
+            "tipo": "Universidade",
+            "endereco": "Rua Itambé",
+            "numero": "45",
+            "complemento": "Próximo à estação Higienópolis-Mackenzie do Metrô",
+            "cep": "01239-001",
+            "cidade": "São Paulo",
+            "estado": "SP",
+            "telefone1": "(11) 2114-8000",
+            "descricao": "Instituição de ensino superior privada e confessional, reconhecida por sua tradição e excelência acadêmica.",
+            "horario_funcionamento": "Segunda a sexta, das 07h às 23h; Sábados, das 07h às 18h",
+            "localizacao": "SRID=4326;POINT(-46.3908 -23.3254)"
         }
     ]
     

@@ -47,9 +47,50 @@
       </div>
     </section>
 
+    <!-- Geolocation Status and Attendance Registration -->
+    @if (isWithinRadius !== null) {
+      <section class="attendance-section">
+        @if (isWithinRadius) {
+          <div class="proximity-alert success">
+            <p>✓ Você está no raio permitido para registrar atendimento</p>
+          </div>
+        } @else {
+          <div class="proximity-alert error">
+            <p>✗ Você está fora do raio permitido para registrar atendimento</p>
+            <p class="small">Aproxime-se da unidade (raio: 100 metros)</p>
+          </div>
+        }
+
+        <!-- Attendance Messages -->
+        @if (attendanceMessage) {
+          <div class="attendance-message success">
+            {{ attendanceMessage }}
+          </div>
+        }
+        @if (attendanceError) {
+          <div class="attendance-message error">
+            {{ attendanceError }}
+          </div>
+        }
+
+        <!-- Attendance Registration Button -->
+        <button
+          type="button"
+          class="attendance-button"
+          [disabled]="!isWithinRadius || isRegistering"
+          (click)="registerAttendance()"
+        >
+          @if (isRegistering) {
+            <span>Processando...</span>
+          } @else {
+            <span>{{ attendanceButtonLabel }}</span>
+          }
+        </button>
+      </section>
+    }
+
     <div class="actions">
       <button type="button" class="secondary-button">Como Chegar</button>
-      <a routerLink="/registrar-atendimento" class="primary-button">Registrar Entrada</a>
     </div>
   }
 </section>

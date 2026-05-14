@@ -19,7 +19,7 @@ from backend.app.schemas.atendimento import (
 
 
 # Constante de distância em metros para validação de proximidade
-RAIO_PERMITIDO_METROS = 100.0
+RAIO_PERMITIDO_METROS = 2000.0
 
 router = APIRouter(prefix="/atendimentos", tags=["Atendimentos"])
 
