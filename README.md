@@ -1,125 +1,193 @@
 # MedTime — Monitoramento de Tempo de Espera em Hospitais
 
-MedTime é uma aplicação que ajuda pacientes a visualizar tempos médios de espera em unidades de pronto atendimento e registrar etapas do atendimento em tempo real. O projeto está organizado em backend FastAPI, frontend Angular e banco PostgreSQL com PostGIS para geolocalização.
+MedTime e uma aplicacao para monitorar tempo medio de espera em unidades de pronto atendimento e registrar eventos de atendimento em tempo real. O sistema combina backend FastAPI, frontend Angular e banco PostgreSQL com PostGIS para consultas geoespaciais e validacao de proximidade.
 
-## Visão geral do funcionamento
+Feito por:
+* Beatriz Bellini Prado Garcia - 10419741
+* Fabio Oliveira da Silva - 10420458
+* Mateus Teles Magalhães - 10427410
+* Matheus Mendonça Lopes - 10443495
+* Patrick Rocha de Andrade - 10410902
 
-1. O frontend Angular lista unidades e seus tempos médios de espera.
-2. A API FastAPI consulta o banco com dados de atendimento e calcula tempos médios (últimos 5 registros).
-3. O paciente pode registrar entrada, triagem e atendimento médico em etapas, com validação de proximidade geográfica.
+Prof. Luiz Carlos Machi Lozano
 
-## Casos de uso implementados
+## Objetivo e escopo
 
-- **UC001 — Verificar Tempo em Pronto Atendimento**  
-  Listagem de unidades com tempo médio de espera e ordenação por proximidade quando a geolocalização está disponível.
+- Entregar tempos medios de espera por unidade (baseado nos ultimos 5 atendimentos).
+- Permitir registro de etapas do atendimento com validacao de raio geografico.
+- Disponibilizar busca textual de unidades no frontend.
 
-- **UC004 — Registrar evento de atendimento (fluxo síncrono)**  
-  Registro por etapas (entrada → triagem → atendimento médico) com botão dinâmico e validação de raio (2 km).
+Os casos de uso detalhados estao em [docs/UC001.md](docs/UC001.md), [docs/UC004.md](docs/UC004.md) e [docs/UC008.md](docs/UC008.md).
 
-- **UC008 — Pesquisar Hospitais**  
-  Busca textual na lista de unidades, filtrando por nome e endereço no frontend.
+## Arquitetura (visao tecnica)
 
-**Em evolução / mockados:** histórico de atendimentos, avaliações, favoritos e perfil do paciente estão representados no frontend como placeholders/mocks para próximas etapas.
+**Camadas logicas**
+- **Apresentacao**: Angular 21 (standalone components), responsavel por listagem, detalhes de unidade, registro de etapas e busca textual.
+- **Aplicacao**: FastAPI com rotas REST, validacao de regras de negocio e orquestracao das consultas geoespaciais.
+- **Dados**: PostgreSQL 15 + PostGIS para persistencia e funcoes de distancia.
 
-## Tecnologias
+**Fluxo principal**
+1. O frontend consulta `GET /unidades` e recebe tempos medios e coordenadas.
+2. O backend calcula o tempo medio de triagem e atendimento com CTEs (ultimos 5 atendimentos por unidade).
+3. Ao registrar etapas, o backend valida proximidade via `ST_DWithin` antes de gravar.
+
+**Infraestrutura**
+- Em desenvolvimento local, o ambiente usa Docker Compose com tres servicos (db, backend, frontend).
+- O deployment alvo e uma instancia unica na AWS (EC2) com containers e reverse proxy, conforme [docs/arquitetura.md](docs/arquitetura.md).
+
+## Stack e componentes
 
 **Backend**
-- Python + FastAPI (API REST)
-- SQLAlchemy async + Alembic (ORM e migrações)
-- GeoAlchemy2 + PostGIS (geolocalização e cálculo de distância)
+- FastAPI com routers para unidades e atendimentos.
+- SQLAlchemy async + Alembic para ORM e migracoes.
+- GeoAlchemy2 + PostGIS para distancia e geolocalizacao.
 
 **Frontend**
-- Angular 21 (standalone components)
+- Angular 21 (standalone), com paginas para lista e detalhe de unidades, registro de atendimento e historico.
 
-**Banco de dados**
-- PostgreSQL 15 + PostGIS
+**Banco**
+- PostgreSQL 15 + PostGIS.
 
-**Infra**
-- Docker + Docker Compose
-- **Deploy alvo: EC2** (frontend, backend e banco hospedados na mesma instância)
+## Estrutura relevante do repositorio
 
-## Principais endpoints da API
+- Backend e API: [backend/app](backend/app)
+- Routers principais: [backend/app/routers](backend/app/routers)
+- Modelos e conexao DB: [backend/database](backend/database)
+- Migracoes: [alembic](alembic)
+- Frontend Angular: [frontend](frontend)
+- Documentacao: [docs](docs)
+- Testes automatizados: [backend/tests](backend/tests)
+- Pipeline CI: [.github/workflows/ci.yml](.github/workflows/ci.yml)
 
-- `GET /unidades` — Lista unidades (suporta `lat`, `lon`, `raio_km` para proximidade)
-- `GET /unidades/{id}` — Detalhes de uma unidade e tempo médio calculado
-- `GET /atendimentos/ativo` — Status do atendimento ativo (para controle do botão)
-- `POST /atendimentos` — Registrar entrada
-- `PATCH /atendimentos/{id}/avancar-etapa` — Registrar triagem/atendimento médico
-- `GET /atendimentos/paciente/{paciente_id}` — Histórico do paciente
-- `GET /health` — Health check
+## Backend — detalhes tecnicos
 
-## Executar localmente (Docker)
+**Rotas principais**
+- `GET /unidades`: lista unidades com tempos medios e, se informado `lat`, `lon` e `raio_km`, aplica filtro e ordenacao por distancia.
+- `GET /unidades/{id}`: detalha uma unidade com tempo medio total.
+- `GET /atendimentos/ativo`: verifica atendimento em aberto e devolve o estado do botao.
+- `POST /atendimentos`: cria o registro inicial (chegada) com validacao de raio.
+- `PATCH /atendimentos/{id}/avancar-etapa`: avanca para triagem e atendimento medico.
+- `GET /atendimentos/paciente/{paciente_id}`: lista historico ordenado por data.
+- `GET /health`: health check simples.
+
+**Calculo de tempo medio**
+- Para cada unidade, o backend calcula media de triagem e de atendimento com janela dos ultimos 5 registros.
+- A soma das medias forma o tempo medio total exibido no frontend.
+
+**Geolocalizacao**
+- A validacao de proximidade usa `ST_DWithin` com cast para `Geography` (metros).
+- O raio permitido e 2 km.
+
+**Seed de dados**
+- Na inicializacao do backend, o seed popula unidades, pacientes e atendimentos de exemplo.
+- Paciente de teste do frontend: ID `999`.
+
+## Frontend — detalhes tecnicos
+
+**Organizacao**
+- Paginas principais em [frontend/src/app/pages](frontend/src/app/pages).
+- Servicos de dados e geolocalizacao em [frontend/src/app/core](frontend/src/app/core).
+
+**Fluxos implementados**
+- Lista de unidades com tempo medio (UC001).
+- Detalhe da unidade com botao dinamico de registro (UC004).
+- Busca textual de hospitais (UC008).
+
+**Geolocalizacao (modo mock)**
+- Para demonstracao sem GPS real, use `?geoloc-mock=true` na URL do frontend.
+
+## Banco de dados e modelo
+
+- Entidades principais: Unidade, Paciente, Atendimento.
+- Relacionamentos: Unidade 1..* Atendimento, Paciente 1..* Atendimento.
+- Detalhes do modelo em [docs/dominio_classes.md](docs/dominio_classes.md).
+
+## Instalacao e execucao
+
+### 1) Executar tudo via Docker (recomendado)
 
 ```bash
 docker-compose up -d
-sleep 15
 ```
 
-**Acessos locais:**
+O banco leva alguns segundos para ficar pronto. Aguarde ~15s antes de fazer migracoes ou testes.
+
+**Acessos locais**
 - Frontend: http://localhost:4200
 - API: http://localhost:8000
-- Docs da API: http://localhost:8000/docs
+- Swagger: http://localhost:8000/docs
 
-**Proxy local do frontend:** o Angular usa `/api` como base e o `frontend/proxy.conf.json` encaminha para o backend no Docker.
+### 2) Execucao local (backend fora do container)
 
-## Dados iniciais
+1. Suba o banco via Docker:
+```bash
+docker-compose up -d db
+```
 
-No startup da API, um seed popula o banco com unidades, pacientes e atendimentos de exemplo. O paciente de teste usado no frontend possui ID `999`.
+2. Crie o ambiente virtual e instale dependencias:
+```bash
+python -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements-dev.txt
+```
 
-## Variáveis de ambiente padrão (docker-compose.yml)
+3. Aplique migracoes:
+```bash
+python -m alembic upgrade head
+```
 
+4. Inicie a API:
+```bash
+uvicorn backend.app.main:app --reload
+```
+
+### 3) Frontend local
+
+```bash
+cd frontend
+npm ci
+npm run start
+```
+
+O proxy local usa `/api` e encaminha para o backend.
+
+## Configuracao e variaveis
+
+Variaveis default do Docker Compose:
 - `POSTGRES_USER`: `dev_user`
 - `POSTGRES_PASSWORD`: `dev_password`
 - `POSTGRES_DB`: `app_db`
 - `DATABASE_URL`: `postgresql+asyncpg://dev_user:dev_password@db:5432/app_db`
 
-## Geolocalização (modo mock)
+Regras adicionais e observacoes de PostGIS estao em [CONFIG-DE-AMBIENTE.md](CONFIG-DE-AMBIENTE.md).
 
-Para demonstrar o fluxo de registro sem GPS real, use `?geoloc-mock=true` na URL do frontend. O botão de registro ficará habilitado e a localização será simulada.
+## Testes e validacao
 
-## Deploy no EC2 (alvo do projeto)
-
-O projeto foi pensado para publicar **todos os serviços em uma instância EC2** utilizando Docker:
-
-1. Build das imagens (backend, frontend e PostGIS).
-2. Execução com Docker Compose na instância.
-3. Configurar reverse proxy (ex.: Nginx) para servir o frontend e encaminhar `/api` para o backend.
-4. Ajustar variáveis de ambiente para produção e habilitar HTTPS.
-
-## Estrutura do projeto
-
-```
-.
-├── backend/              # API FastAPI
-├── frontend/             # Angular 21
-├── alembic/              # Migrações
-├── docker-compose.yml    # Ambiente local e EC2
-└── README.md
-```
-
-## Documentação
-
-- Casos de uso: [docs/UC001.md](docs/UC001.md), [docs/UC004.md](docs/UC004.md), [docs/UC008.md](docs/UC008.md)
-- Arquitetura: [docs/arquitetura.md](docs/arquitetura.md)
-- Requisitos: [docs/Lista_Requisitos.md](docs/Lista_Requisitos.md)
-- Testes: [TESTES.md](TESTES.md)
-
-## Testes automatizados
-
-1. Subir o banco de dados:
-
+**Automatizados**
+- Rodar testes com banco PostGIS:
 ```bash
 docker-compose up -d
-```
-
-2. Rodar migracoes:
-
-```bash
 python -m alembic upgrade head
-```
-
-3. Executar a suite:
-
-```bash
 python -m pytest
 ```
+
+**CI**
+- O pipeline esta definido em [.github/workflows/ci.yml](.github/workflows/ci.yml) e executa migracoes e testes com cobertura (minimo 70%).
+
+Plano de testes completo em [TESTES.md](TESTES.md).
+
+## Documentacao do projeto
+
+- Arquitetura e deploy alvo: [docs/arquitetura.md](docs/arquitetura.md)
+- Requisitos: [docs/Lista_Requisitos.md](docs/Lista_Requisitos.md)
+- Casos de uso: [docs/UC001.md](docs/UC001.md), [docs/UC004.md](docs/UC004.md), [docs/UC008.md](docs/UC008.md)
+- Diagrama de casos de uso: [docs/Diagrama_casos_uso.md](docs/Diagrama_casos_uso.md)
+- Diagrama de dominio: [docs/dominio_classes.md](docs/dominio_classes.md)
+
+## Deploy (alvo do projeto)
+
+O deploy previsto utiliza uma unica instancia EC2 executando containers:
+1. Build das imagens (backend, frontend e PostGIS).
+2. Subida com Docker Compose.
+3. Reverse proxy (ex.: Nginx) para servir frontend e encaminhar `/api` ao backend.
+4. Ajuste de variaveis e HTTPS em producao.

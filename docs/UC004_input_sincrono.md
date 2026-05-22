@@ -1,4 +1,4 @@
-# Especificação de Caso de Uso: UC004
+# Especificacao de Caso de Uso: UC004 (input sincrono)
 
 ## Informações Gerais
 
@@ -7,9 +7,9 @@
 | **Identificador** | UC004 |
 | **Nome** | Registrar evento de atendimento |
 | **Atores** | Paciente |
-| **Sumário** | O paciente registra o momento exato de cada etapa do seu atendimento (entrada, triagem e atendimento médico) através de um botão dinâmico na tela de detalhes da unidade, que captura automaticamente o horário do dispositivo. A ação exige que o paciente esteja nas proximidades da unidade. |
-| **Pré-condição** | O paciente deve estar autenticado, com o GPS ativado e estar fisicamente próximo à unidade de atendimento. |
-| **Pós-condição** | O horário exato capturado do dispositivo para a etapa atual é salvo no sistema e o botão é atualizado para a próxima etapa. |
+| **Sumario** | O paciente registra o momento exato de cada etapa do atendimento por um botao dinamico que captura o horario do dispositivo. |
+| **Pre-condicao** | Paciente e unidade existentes, GPS disponivel e usuario dentro do raio permitido (2 km). |
+| **Pos-condicao** | O horario da etapa atual e salvo e o botao e atualizado para a proxima etapa. |
 | **Pontos de Inclusão** | |
 | **Pontos de Extensão** | |
 
@@ -17,46 +17,46 @@
 
 ## Fluxo Principal
 
-| Ações do Ator | Ações do Sistema |
+| Acoes do Ator | Acoes do Sistema |
 | :--- | :--- |
 | 1. O paciente acessa a tela de detalhes da unidade. | |
-| | 2. O sistema valida as coordenadas geográficas do paciente em relação à unidade. |
+| | 2. O sistema valida as coordenadas geograficas do paciente em relacao a unidade. |
 | | 3. O aplicativo exibe o botão de registro com a etapa atual pendente (ex: "Registrar Entrada"). |
 | 4. O paciente aciona o botão. | |
 | | 5. O sistema captura o horário do dispositivo (horário de máquina). |
-| | 6. O sistema envia a marcação para a base de dados. |
-| | 7. O sistema exibe uma mensagem de sucesso e altera o texto e o estado do botão para a próxima etapa cronológica (ex: "Registrar Triagem"). |
+| | 6. O sistema envia a marcacao para a base de dados via API. |
+| | 7. O sistema exibe sucesso e altera o texto do botao para a proxima etapa (ex: "Registrar Triagem"). |
 
 ---
 
-## Fluxo de Exceção 1: Distância Excedida (Geolocalização)
+## Fluxo de Excecao 1: Distancia excedida (geolocalizacao)
 
-| Ações do Ator | Ações do Sistema |
+| Acoes do Ator | Acoes do Sistema |
 | :--- | :--- |
 | | 1. O sistema verifica as coordenadas do paciente ao carregar a tela de detalhes. |
 | | 2. O sistema identifica que o paciente está fora do raio de proximidade permitido para a unidade selecionada. |
-| | 3. O aplicativo desabilita o botão de registro. |
-| | 4. O aplicativo exibe uma mensagem informando que o registro só pode ser feito nas dependências da unidade de saúde. |
+| | 3. O aplicativo desabilita o botao de registro. |
+| | 4. O aplicativo exibe mensagem informando que o registro so pode ser feito nas dependencias da unidade. |
 
 ---
 
-## Fluxo de Exceção 2: Falha de Conexão ou Timeout
+## Fluxo de Excecao 2: Falha de conexao ou timeout
 
-| Ações do Ator | Ações do Sistema |
+| Acoes do Ator | Acoes do Sistema |
 | :--- | :--- |
 | | 1. O sistema tenta enviar a marcação do horário para a base de dados após o acionamento pelo paciente. |
 | | 2. Ocorre uma falha de rede ou timeout durante o envio. |
-| | 3. O aplicativo exibe uma mensagem de erro informando que o evento não pôde ser registrado. |
-| | 4. O botão mantém o estado original, permitindo que o usuário realize uma nova tentativa. |
+| | 3. O aplicativo exibe uma mensagem de erro informando que o evento nao pode ser registrado. |
+| | 4. O botao mantem o estado original, permitindo nova tentativa. |
 
 
-# Diagrama de Sequência UC004 Sincrono
+# Diagrama de Sequencia UC004 Sincrono
 ```plantuml
 @startuml
     actor Paciente as pac
     participant "Interface Atendimento" as intat
     participant "Controller Atendimento" as contat
-    participant "Repositório Atendimentos" as repat
+    participant "Repositorio Atendimentos" as repat
     database "Banco de Dados" as bd
 
     contat -> intat: mostrarAtendimento()

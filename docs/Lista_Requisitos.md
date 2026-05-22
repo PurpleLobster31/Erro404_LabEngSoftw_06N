@@ -2,29 +2,29 @@
 
 ## Requisitos Funcionais
 
-| ID   | Requisito                       | Descrição                                                                                                                                  | Prioridade |
-| ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| RF01 | Verificar tempo de espera       | O sistema deve permitir que o paciente visualize o tempo estimado de espera para atendimento em unidades de pronto atendimento.            | Alta       |
-| RF02 | Visualizar mapa de hospitais    | O sistema deve apresentar um mapa com a localização das unidades de saúde disponíveis.                                                     | Baixa       |
-| RF03 | Visualizar especialidades       | O sistema deve permitir que o paciente visualize quais especialidades médicas estão disponíveis em cada unidade de saúde.                  | Média       |
-| RF04 | Registrar evento de atendimento | O sistema deve permitir que o paciente registre um evento informando que iniciou ou finalizou um atendimento em uma unidade de saúde.      | Alta       |
-| RF05 | Avaliar atendimento             | O sistema deve permitir que o paciente avalie o atendimento recebido em uma unidade de saúde.                                              | Baixa      |
-| RF06 | Cadastrar dados médicos         | O sistema deve permitir que o paciente cadastre dados médicos básicos relevantes ao atendimento (ex.: alergias, condições pré-existentes). | Baixa      |
-| RF07 | Favoritar hospitais             | O sistema deve permitir que o paciente adicione unidades de saúde a uma lista de hospitais favoritos.                                      | Baixa      |
-| RF08 | Pesquisar hospitais             | O sistema deve permitir que o paciente pesquise hospitais pelo nome, localização ou especialidade.                                         | Alta       |
-| RF09 | Atualizar dados de espera       | O sistema deve atualizar automaticamente as estimativas de tempo de espera conforme novos eventos de atendimento forem registrados.        | Alta       |
+| ID   | Requisito                       | Descricao                                                                                                                                  | Prioridade | Status |
+| ---- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------ |
+| RF01 | Verificar tempo de espera       | O sistema permite que o paciente visualize o tempo estimado de espera para atendimento em unidades de pronto atendimento.                  | Alta       | Implementado |
+| RF02 | Visualizar mapa de hospitais    | O sistema apresenta um mapa com a localizacao das unidades de saude disponiveis.                                                           | Baixa      | Planejado |
+| RF03 | Visualizar especialidades       | O sistema permite visualizar especialidades medicas disponiveis em cada unidade.                                                           | Media      | Planejado |
+| RF04 | Registrar evento de atendimento | O sistema permite registrar entrada, triagem e atendimento medico em uma unidade, com validacao de raio.                                   | Alta       | Implementado |
+| RF05 | Avaliar atendimento             | O sistema permite que o paciente avalie o atendimento recebido em uma unidade de saude.                                                    | Baixa      | Planejado |
+| RF06 | Cadastrar dados medicos         | O sistema permite cadastro de dados medicos basicos do paciente.                                                                           | Baixa      | Planejado |
+| RF07 | Favoritar hospitais             | O sistema permite favoritar unidades para priorizar visualizacao.                                                                          | Baixa      | Planejado (UI parcial) |
+| RF08 | Pesquisar hospitais             | O sistema permite pesquisa textual de unidades por nome ou endereco na lista carregada.                                                    | Alta       | Implementado |
+| RF09 | Atualizar dados de espera       | O sistema recalcula medias automaticamente com base nos atendimentos registrados (ultimos 5).                                               | Alta       | Implementado |
 
-## Requisitos Não Funcionais
+## Requisitos Nao Funcionais
 
-| ID    | Requisito               | Descrição                                                                                                                       | Prioridade |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| RNF01 | Disponibilidade         | O sistema deve estar disponível 24 horas por dia, 7 dias por semana.                                                            | Alta       |
-| RNF02 | Desempenho              | O tempo de resposta para consultas de hospitais e tempo de espera deve ser inferior a 5 segundos.                               | Média       |
-| RNF03 | Escalabilidade          | O sistema deve suportar múltiplos usuários simultâneos sem degradação significativa de desempenho.                              | Alta       |
-| RNF04 | Segurança               | Os dados dos usuários devem ser protegidos utilizando autenticação e criptografia adequadas.                                    | Média       |
-| RNF05 | Usabilidade             | A interface do sistema deve ser simples e intuitiva, permitindo que usuários encontrem rapidamente informações sobre hospitais. | Alta       |
-| RNF06 | Compatibilidade         | O sistema deve funcionar em navegadores modernos e dispositivos móveis.                                                         | Média      |
-| RNF07 | Integração com API      | O sistema deve consumir uma API para obter e atualizar dados das unidades de saúde e tempos de espera.                          | Alta       |
-| RNF08 | CI/CD                   | O projeto deve possuir pipeline de integração contínua e entrega contínua.                                                      | Média       |
-| RNF09 | Infraestrutura em nuvem | O sistema deve ser implantado utilizando um serviço de computação em nuvem da AWS.                                              | Média       |
-| RNF10 | Testes                  | O sistema deve possuir testes automatizados para garantir a qualidade das funcionalidades principais.                           | Média       |
+| ID    | Requisito               | Descricao                                                                                                                       | Prioridade | Status |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| RNF01 | Disponibilidade         | O sistema deve estar disponivel 24 horas por dia, 7 dias por semana.                                                            | Alta       | Nao validado |
+| RNF02 | Desempenho              | O tempo de resposta para consultas de hospitais e tempo de espera deve ser inferior a 5 segundos.                               | Media      | Nao validado |
+| RNF03 | Escalabilidade          | O sistema deve suportar multiplos usuarios simultaneos sem degradacao significativa de desempenho.                              | Alta       | Nao validado |
+| RNF04 | Seguranca               | Os dados dos usuarios devem ser protegidos utilizando autenticacao e criptografia adequadas.                                    | Media      | Planejado |
+| RNF05 | Usabilidade             | A interface deve ser simples e intuitiva, permitindo que usuarios encontrem rapidamente informacoes sobre hospitais.            | Alta       | Implementado |
+| RNF06 | Compatibilidade         | O sistema deve funcionar em navegadores modernos e dispositivos moveis.                                                         | Media      | Implementado |
+| RNF07 | Integracao com API      | O sistema deve consumir uma API para obter e atualizar dados das unidades de saude e tempos de espera.                          | Alta       | Implementado |
+| RNF08 | CI/CD                   | O projeto deve possuir pipeline de integracao continua e entrega continua.                                                      | Media      | Implementado |
+| RNF09 | Infraestrutura em nuvem | O sistema deve ser implantado utilizando um servico de computacao em nuvem da AWS.                                              | Media      | Planejado |
+| RNF10 | Testes                  | O sistema deve possuir testes automatizados para garantir a qualidade das funcionalidades principais.                           | Media      | Implementado |

@@ -1,144 +1,48 @@
-# Casos de Uso
+# Casos de Uso (as-is)
 
-| Nome | Descrição | 
-| :--- | :---: | 
-| UC001 - Verificar Tempo em Pronto Atendimento | O usuário verifica os hospitais relevantes e o tempo de atendimento em cada |
-| UC002 - Visualizar Mapa de Hospitais | O usuário visualiza o mapa da cidade com hospitais mais próximos |
-| UC003 - Visualizar Especialidades | O usuário visualiza para cada unidade de atendimento o tempo de espera com base na especialidade desejada | 
-| UC004 - Registrar evento de atendimento | O usuário registra o momento de entrada na unidade, a hora da triagem e a hora do atendimento com o especialista | 
-| UC005 - Avaliar atendimento | O usuário avalia o atendimento da unidade | 
-| UC006 - Cadastrar dados médicos | O usuário salva seus dados médicos |
-| UC007 - Favoritar Hospitais | O usuário favorita os hospitais para priorizar visualização |
-| UC008 - Pesquisar Hospitais | O usuário visualiza os hospitais da região em formato de lista e pode pesquisá-los por nome |
-
+| Nome | Descricao | Status |
+| :--- | :--- | :--- |
+| UC001 - Verificar Tempo em Pronto Atendimento | Lista unidades e exibe tempo medio de espera. | Implementado |
+| UC002 - Visualizar Mapa de Hospitais | Mapa com unidades proximas. | Planejado |
+| UC003 - Visualizar Especialidades | Especialidades por unidade. | Planejado |
+| UC004 - Registrar evento de atendimento | Registro sincronizado de entrada, triagem e atendimento medico com validacao de raio. | Implementado |
+| UC005 - Avaliar atendimento | Avaliacao da unidade. | Planejado |
+| UC006 - Cadastrar dados medicos | Cadastro de dados medicos do paciente. | Planejado |
+| UC007 - Favoritar Hospitais | Favoritos no frontend. | Planejado (UI parcial) |
+| UC008 - Pesquisar Hospitais | Busca textual na lista de unidades. | Implementado |
 
 ```plantuml
 @startuml
-
 left to right direction
-title Modelo de Caso de Uso
+title Modelo de Caso de Uso (as-is)
 
 Actor "Paciente" as pc
-Actor "Equipe Técnica" as et
 
-rectangle "HUB Médico" {
+rectangle "MedTime" {
     pc -- (UC001 - Verificar Tempo em Pronto Atendimento)
-    pc -- (UC002 - Visualizar Mapa de Hospitais)
-    pc -- (UC003 - Visualizar Especialidades)
     pc -- (UC004 - Registrar evento de atendimento)
-    pc -- (UC005 - Avaliar atendimento)
-    pc -- (UC006 - Cadastrar dados médicos)
-    pc -- (UC007 - Favoritar Hospitais)
     pc -- (UC008 - Pesquisar Hospitais)
 }
 @enduml
 ```
-# Diagrama de sequência do UC001
+
+# Diagrama de sequencia do UC001 (simplificado)
 ```plantuml
 @startuml
+actor Paciente as pac
+boundary "UI Lista de Unidades" as ui
+participant "Frontend" as fe
+participant "API FastAPI" as api
+database "PostgreSQL + PostGIS" as bd
 
-    actor Paciente as pac
-    boundary "Interface Pesquisa" as intpes
-    participant "Controller Pesquisa" as contpes
-    boundary "Interface Mapa" as intmap
-    participant "Controller Mapa" as contmap
-    participant Unidades as un
-    participant "Unidades Repositorio" as unre
-    database "Banco de dados" as bd
-    
-    alt Por caixa de pesquisa
-        contpes -> unre: listarUnidades()
-        activate contpes
-        activate unre
-        unre -> bd: query
-        activate bd
-        bd --> unre: resultado
-        deactivate bd
-        unre -> un: listarUnidades(resultado)
-        un --> unre: Unidades[ ]
-        unre --> contpes: Unidades[ ]
-        deactivate unre
-        contpes -> intpes: listarUnidades(Unidades[ ])
-        activate intpes
-        contpes -> intpes: solicitarInformacoes()
-        pac -> intpes: Informações da Unidade
-        intpes --> contpes: informacoes
-        contpes -> unre: getUnidade(informacoes)
-        activate unre
-        unre -> bd: query
-        activate bd
-        bd --> unre: resultado
-        deactivate bd
-        unre -> un: new Unidade(resultado)
-        un --> unre: Unidade
-        unre --> contpes: Unidade
-        deactivate unre
-        contpes --> intpes: mostrarUnidade(Unidade)
-        deactivate intpes
-        deactivate contpes
-        
-
-    else Pelo mapa
-        contmap -> unre: listarUnidades(Localizacao)
-        activate contmap
-        activate unre
-        unre -> bd: query
-        activate bd
-        bd --> unre: resultado
-        deactivate bd
-        unre --> contmap: Unidades[ ]
-        deactivate unre 
-        contmap -> intmap: mostrarMapa()
-        activate intmap
-        contmap -> intmap: espalharUnidades(Chunk,Unidades[])
-        pac -> intmap: Seleciona a unidade
-        intmap -> contmap: getTempo(Unidade)
-        contmap -> contmap: getTempo(Unidade)
-        contmap --> intmap: Tempo
-        deactivate intmap
-        deactivate contmap
-
-
-    end
+pac -> ui: abrir lista
+ui -> fe: carregar unidades
+fe -> api: GET /unidades
+api -> bd: query + calculo de medias
+bd --> api: unidades + tempos
+api --> fe: resposta
+fe --> ui: renderizar lista
 @enduml
 ```
 
-# Diagrama de Sequência do UC004
-```plantuml
-@startuml
-
-@enduml
-```
-
-
-# Escopo do Diagrama de Classe (apenas para salvar formatação)
-Exemplo de uma aula do takase para alterar depois com as classes do nosso projeto
-
-
-```plantuml
-@startuml
-
-hide circle
-
-'skinparam classAttributeIconSize 0
-'skinparam classFontStyle bold
-'skinparam classFontSize 14
-'skinparam classBackgroundColor LightBlue
-'skinparam classStereotypeFontSize 12
-
-class Cliente
-class Chamado 
-class HelpDesk 
-class TimeSuporte 
-class MembroSuporte 
-class Funcionario
-
-Cliente "1" -r- "*" Chamado : Reporta >
-Chamado "*" -r- "1" HelpDesk : Registra >
-Chamado "*" -d-- "0..1" TimeSuporte : Tratado por >
-TimeSuporte o-r- "*" MembroSuporte : Tem membro >
-MembroSuporte -u|> Funcionario
-HelpDesk -d-|> Funcionario
-
-@enduml
-```
+Detalhes completos em [docs/UC001.md](UC001.md), [docs/UC004_input_sincrono.md](UC004_input_sincrono.md) e [docs/UC008.md](UC008.md).

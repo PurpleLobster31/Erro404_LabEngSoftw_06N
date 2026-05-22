@@ -1,8 +1,10 @@
-# Arquitetura - MedTime
+# Arquitetura - MedTime (as-is)
 
-```
+O projeto e executado localmente via Docker Compose e, no deploy alvo, em uma unica instancia EC2 contendo frontend, backend e banco no mesmo host. O frontend consome a API via HTTP e o backend acessa o banco PostGIS para consultas geoespaciais.
+
+```plantuml
 @startuml
-title Arquitetura - MedTime
+title Arquitetura - MedTime (as-is)
 
 left to right direction
 
@@ -10,26 +12,16 @@ actor Paciente
 
 cloud Internet
 
-rectangle "AWS Cloud" {
-
-    rectangle "Frontend Layer" {
-        component "Angular (CloudFront)"
-    }
-
-    rectangle "Application Layer" {
-        component "FastAPI (EC2)"
-    }
-
-    rectangle "Data Layer" {
-        database "PostgreSQL (RDS)"
-    }
-
+rectangle "AWS EC2 (Docker)" {
+    component "Angular (Frontend)"
+    component "FastAPI (Backend)"
+    database "PostgreSQL + PostGIS"
 }
 
 Paciente --> Internet
-Internet --> "Angular (CloudFront)" : HTTPS
-"Angular (CloudFront)" --> "FastAPI (EC2)" : REST API
-"FastAPI (EC2)" --> "PostgreSQL (RDS)" : SQL
+Internet --> "Angular (Frontend)" : HTTPS
+"Angular (Frontend)" --> "FastAPI (Backend)" : REST API
+"FastAPI (Backend)" --> "PostgreSQL + PostGIS" : SQL + PostGIS
 
 @enduml
 ```

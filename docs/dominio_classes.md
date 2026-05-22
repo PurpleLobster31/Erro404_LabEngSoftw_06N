@@ -1,4 +1,4 @@
-# Diagrama de Classe de Domínio
+# Diagrama de Classe de Dominio (as-is)
 ```plantuml
 @startuml
 left to right direction
@@ -8,14 +8,13 @@ class Paciente {
     sobrenome: String
     data_nascimento: Date
     email: String
-    senhaHash: String
 }
 
 class Atendimento {
     status: String
-    horario_chegada: Date
-    horario_triagem: Date
-    horario_atendimento: Date
+    horario_chegada: DateTime
+    horario_triagem: DateTime
+    horario_atendimento: DateTime
 }
 
 class Unidade {
@@ -29,36 +28,16 @@ class Unidade {
     estado: String
     telefone1: String
     telefone2: String
-}
-
-class Especialidade {
-    nome: String
-}
-
-class Rede {
-    nome: String
-}
-
-class TempoAtendimento {
-    tempoMedio: double
+    descricao: String
+    horario_funcionamento: String
+    imagem_url: String
+    localizacao: Point
 }
 
 Paciente "1" *-- "0..*" Atendimento
 Unidade "1" *-- "0..*" Atendimento
 
-Rede "1" o-- "0..*" Unidade
-
-Unidade "0..*" -- "0..*" Especialidade
-
-Unidade "1" -- "0..*" TempoAtendimento
-Especialidade "1" -- "0..*" TempoAtendimento
-
 Paciente -[hidden]-> Atendimento
 Atendimento -[hidden]-> Unidade
-Unidade -[hidden]-> Especialidade
-
-Rede -[hidden]-> Unidade
-Especialidade -[hidden]-> TempoAtendimento
-
 @enduml
 ```
