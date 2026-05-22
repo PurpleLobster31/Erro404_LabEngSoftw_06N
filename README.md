@@ -102,3 +102,24 @@ O projeto foi pensado para publicar **todos os serviços em uma instância EC2**
 - Casos de uso: [docs/UC001.md](docs/UC001.md), [docs/UC004.md](docs/UC004.md), [docs/UC008.md](docs/UC008.md)
 - Arquitetura: [docs/arquitetura.md](docs/arquitetura.md)
 - Requisitos: [docs/Lista_Requisitos.md](docs/Lista_Requisitos.md)
+- Testes: [TESTES.md](TESTES.md)
+
+## Testes automatizados
+
+1. Subir o banco de dados:
+
+```bash
+docker-compose up -d
+```
+
+2. Rodar migracoes:
+
+```bash
+python -m alembic upgrade head
+```
+
+3. Executar a suite:
+
+```bash
+python -m pytest
+```
