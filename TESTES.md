@@ -29,7 +29,7 @@ Validar o fluxo principal da API (UC001 e UC004) com testes automatizados contra
    ```
 
 ## Execucao na esteira (CI)
-A esteira usa o workflow definido em [/.github/workflows/ci.yml](.github/workflows/ci.yml) e executa os passos abaixo em ambiente Linux :
+A esteira usa o workflow definido em [/.github/workflows/ci.yml](.github/workflows/ci.yml) e executa os passos abaixo em ambiente Linux:
 
 1. Sobe um Postgres + PostGIS como servico do GitHub Actions.
 2. Instala as dependencias Python.
