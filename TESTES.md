@@ -29,7 +29,7 @@ Validar o fluxo principal da API (UC001 e UC004) com testes automatizados contra
    ```
 
 ## Execucao na esteira (CI)
-A esteira usa o workflow definido em [/.github/workflows/ci.yml](.github/workflows/ci.yml) e executa os passos abaixo em ambiente Linux:
+A esteira usa o workflow definido em [/.github/workflows/ci.yml](.github/workflows/ci.yml) e executa os passos abaixo em ambiente Linux :
 
 1. Sobe um Postgres + PostGIS como servico do GitHub Actions.
 2. Instala as dependencias Python.
@@ -70,6 +70,3 @@ A esteira usa o workflow definido em [/.github/workflows/ci.yml](.github/workflo
 | CT-FE-001 | Busca textual por hospital existente | Acessar lista de unidades, digitar um nome valido e buscar | Lista filtrada com a unidade correspondente | UC008 |
 | CT-FE-002 | Busca sem resultados | Pesquisar termo inexistente | Mensagem de "nenhum hospital encontrado" e campo permanece editavel | UC008 |
 
-## Evidencias solicitadas pelo professor
-- Video curto (sem audio) mostrando a esteira rodando testes automatizados.
-- Capturas de tela da execucao dos testes (prints) para anexar no .docx.
